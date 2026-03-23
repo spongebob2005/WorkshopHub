@@ -8,6 +8,8 @@ const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=600&fit=crop',
   'https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=800&h=600&fit=crop',
   'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop',
+  'https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&h=600&fit=crop',
 ]
 
 export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElement>) {

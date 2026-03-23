@@ -51,7 +51,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 89.99,
     totalSeats: 50,
     availableSeats: 50,
-    image: 'react javascript programming code development workspace laptop',
+    image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop&crop=center',
     skills: ['React', 'JavaScript', 'State Management', 'Hooks'],
   },
   {
@@ -66,7 +66,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 79.99,
     totalSeats: 40,
     availableSeats: 35,
-    image: 'ui ux design figma sketch wireframe tablet digital art',
+    image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=800&h=600&fit=crop&crop=center',
     skills: ['Figma', 'User Research', 'Prototyping', 'Accessibility'],
   },
   {
@@ -81,7 +81,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 99.99,
     totalSeats: 60,
     availableSeats: 42,
-    image: 'python data science analytics charts graphs statistics machine learning',
+    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop&crop=center',
     skills: ['Python', 'Pandas', 'NumPy', 'Machine Learning'],
   },
   {
@@ -96,7 +96,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 69.99,
     totalSeats: 45,
     availableSeats: 28,
-    image: 'digital marketing social media advertising strategy analytics growth',
+    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop&crop=center',
     skills: ['SEO', 'Content Marketing', 'Analytics', 'Social Media'],
   },
   {
@@ -111,7 +111,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 119.99,
     totalSeats: 35,
     availableSeats: 20,
-    image: 'aws cloud computing architecture servers infrastructure technology',
+    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop&crop=center',
     skills: ['AWS', 'Cloud Architecture', 'DevOps', 'Scalability'],
   },
   {
@@ -126,7 +126,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 94.99,
     totalSeats: 40,
     availableSeats: 38,
-    image: 'react native mobile app development smartphone ios android',
+    image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&h=600&fit=crop&crop=center',
     skills: ['React Native', 'Mobile Dev', 'iOS', 'Android'],
   },
   {
@@ -141,7 +141,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 84.99,
     totalSeats: 50,
     availableSeats: 45,
-    image: 'cybersecurity network security protection firewall encryption',
+    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=600&fit=crop&crop=center',
     skills: ['Security', 'Encryption', 'Authentication', 'OWASP'],
   },
   {
@@ -156,7 +156,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 109.99,
     totalSeats: 30,
     availableSeats: 12,
-    image: 'blockchain cryptocurrency ethereum smart contracts defi web3',
+    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&h=600&fit=crop&crop=center',
     skills: ['Blockchain', 'Solidity', 'Web3', 'Smart Contracts'],
   },
 ];
