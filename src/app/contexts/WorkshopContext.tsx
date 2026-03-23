@@ -38,6 +38,26 @@ interface WorkshopContextType {
 
 const WorkshopContext = createContext<WorkshopContextType | undefined>(undefined);
 
+const WORKSHOP_IMAGE_MAP: Record<string, string> = {
+  'Advanced React Patterns & Best Practices': '/workshop-images/REACT_WORKSHOP.jpeg',
+  'UI/UX Design Fundamentals': '/workshop-images/UI_UX_WORKSHOP.jpeg',
+  'Python for Data Science': '/workshop-images/PYTHON_WORKSHOP.jpeg',
+  'Digital Marketing Strategy 2026': '/workshop-images/MARKETING_WORKSHOP.jpeg',
+  'Cloud Architecture with AWS': '/workshop-images/AWS_WORKSHOP.jpeg',
+  'Mobile App Development with React Native': '/workshop-images/REACT_NATIVE.jpeg',
+  'Cybersecurity Essentials': '/workshop-images/CYBER_SECURITY_WORKSHOP.jpeg',
+  'Blockchain & Smart Contracts': '/workshop-images/BLOCK_CHAIN_WORKSHOP.jpeg',
+};
+
+const normalizeAndSaveWorkshops = (workshops: Workshop[]) => {
+  const normalized = workshops.map(workshop => ({
+    ...workshop,
+    image: WORKSHOP_IMAGE_MAP[workshop.title] || workshop.image,
+  }));
+  localStorage.setItem('workshops', JSON.stringify(normalized));
+  return normalized;
+};
+
 const INITIAL_WORKSHOPS: Workshop[] = [
   {
     id: '1',
@@ -169,10 +189,11 @@ export const WorkshopProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     // Initialize workshops from localStorage or use defaults
     const storedWorkshops = localStorage.getItem('workshops');
     if (storedWorkshops) {
-      setWorkshops(JSON.parse(storedWorkshops));
+      const parsed: Workshop[] = JSON.parse(storedWorkshops);
+      setWorkshops(normalizeAndSaveWorkshops(parsed));
     } else {
-      setWorkshops(INITIAL_WORKSHOPS);
-      localStorage.setItem('workshops', JSON.stringify(INITIAL_WORKSHOPS));
+      const normalized = normalizeAndSaveWorkshops(INITIAL_WORKSHOPS);
+      setWorkshops(normalized);
     }
 
     // Load bookings from localStorage
