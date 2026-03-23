@@ -14,6 +14,7 @@ export interface Workshop {
   availableSeats: number;
   image: string;
   skills: string[];
+  tutorials: string[];
 }
 
 export interface Booking {
@@ -47,12 +48,15 @@ const WORKSHOP_IMAGE_MAP: Record<string, string> = {
   'Mobile App Development with React Native': '/workshop-images/REACT_NATIVE.jpeg',
   'Cybersecurity Essentials': '/workshop-images/CYBER_SECURITY_WORKSHOP.jpeg',
   'Blockchain & Smart Contracts': '/workshop-images/BLOCK_CHAIN_WORKSHOP.jpeg',
+  'AI / MLOps Fundamentals': '/workshop-images/AI_WORKSHOP.jpeg',
+  'Full-stack TypeScript Development': '/workshop-images/TYPESCRIPT_WORKSHOP.jpeg',
 };
 
 const normalizeAndSaveWorkshops = (workshops: Workshop[]) => {
   const normalized = workshops.map(workshop => ({
     ...workshop,
     image: WORKSHOP_IMAGE_MAP[workshop.title] || workshop.image,
+    tutorials: workshop.tutorials ?? [],
   }));
   localStorage.setItem('workshops', JSON.stringify(normalized));
   return normalized;
@@ -73,6 +77,12 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     availableSeats: 50,
     image: '/workshop-images/REACT_WORKSHOP.jpeg',
     skills: ['React', 'JavaScript', 'State Management', 'Hooks'],
+    tutorials: [
+      'Module 1: Hooks & Custom Hooks',
+      'Module 2: Context, Reducers & State Management',
+      'Module 3: Performance Optimization Techniques',
+      'Module 4: Architecture & Testing',
+    ],
   },
   {
     id: '2',
@@ -88,6 +98,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     availableSeats: 35,
     image: '/workshop-images/UI_UX_WORKSHOP.jpeg',
     skills: ['Figma', 'User Research', 'Prototyping', 'Accessibility'],
+    tutorials: [
+      'Lesson 1: Design Thinking & User Research',
+      'Lesson 2: Wireframing & Mockups in Figma',
+      'Lesson 3: Accessibility & Usability Testing',
+    ],
   },
   {
     id: '3',
@@ -103,6 +118,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     availableSeats: 42,
     image: '/workshop-images/PYTHON_WORKSHOP.jpeg',
     skills: ['Python', 'Pandas', 'NumPy', 'Machine Learning'],
+    tutorials: [
+      'Part 1: Data Wrangling with Pandas',
+      'Part 2: Visualization with Matplotlib/Seaborn',
+      'Part 3: Intro to Scikit-learn models',
+    ],
   },
   {
     id: '4',
@@ -118,6 +138,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     availableSeats: 28,
     image: '/workshop-images/MARKETING_WORKSHOP.jpeg',
     skills: ['SEO', 'Content Marketing', 'Analytics', 'Social Media'],
+    tutorials: [
+      'Unit 1: Audience research & content strategy',
+      'Unit 2: Running high-impact campaigns',
+      'Unit 3: Tracking growth with analytics',
+    ],
   },
   {
     id: '5',
@@ -133,6 +158,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     availableSeats: 20,
     image: '/workshop-images/AWS_WORKSHOP.jpeg',
     skills: ['AWS', 'Cloud Architecture', 'DevOps', 'Scalability'],
+    tutorials: [
+      'Session 1: AWS core services (EC2/S3/VPC)',
+      'Session 2: Serverless and microservices design',
+      'Session 3: High availability and cost optimization',
+    ],
   },
   {
     id: '6',
@@ -148,6 +178,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     availableSeats: 38,
     image: '/workshop-images/REACT_NATIVE.jpeg',
     skills: ['React Native', 'Mobile Dev', 'iOS', 'Android'],
+    tutorials: [
+      'Step 1: React Native project setup and navigation',
+      'Step 2: Native features and state management',
+      'Step 3: App deployment on iOS/Android stores',
+    ],
   },
   {
     id: '7',
@@ -163,6 +198,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     availableSeats: 45,
     image: '/workshop-images/CYBER_SECURITY_WORKSHOP.jpeg',
     skills: ['Security', 'Encryption', 'Authentication', 'OWASP'],
+    tutorials: [
+      'Chapter 1: Fundamentals of cybersecurity',
+      'Chapter 2: Protecting user data and auth flows',
+      'Chapter 3: Threat models and penetration testing',
+    ],
   },
   {
     id: '8',
@@ -178,6 +218,51 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     availableSeats: 12,
     image: '/workshop-images/BLOCK_CHAIN_WORKSHOP.jpeg',
     skills: ['Blockchain', 'Solidity', 'Web3', 'Smart Contracts'],
+    tutorials: [
+      'Step 1: Blockchain basics and token standards',
+      'Step 2: Smart contract design and auditing',
+      'Step 3: Deploying dApps to live networks',
+    ],
+  },
+  {
+    id: '9',
+    title: 'AI / MLOps Fundamentals',
+    instructor: 'Nina Patel',
+    date: '2026-05-12',
+    time: '3:00 PM',
+    duration: '4 hours',
+    category: 'AI/ML',
+    description: 'Understand ML lifecycle, model deployment, monitoring, and feedback loops using MLOps best practices.',
+    price: 129.99,
+    totalSeats: 30,
+    availableSeats: 30,
+    image: '/workshop-images/AI_WORKSHOP.jpeg',
+    skills: ['Machine Learning', 'MLOps', 'Model Deployment', 'CI/CD'],
+    tutorials: [
+      'Lesson 1: MLOps fundamentals and workflow',
+      'Lesson 2: Training/validation pipelines with CI',
+      'Lesson 3: Deployment, monitoring, and retraining',
+    ],
+  },
+  {
+    id: '10',
+    title: 'Full-stack TypeScript Development',
+    instructor: 'Omar Ali',
+    date: '2026-05-16',
+    time: '11:00 AM',
+    duration: '4 hours',
+    category: 'Web Development',
+    description: 'Build scalable full-stack applications using TypeScript, Node.js, React, and PostgreSQL.',
+    price: 114.99,
+    totalSeats: 35,
+    availableSeats: 35,
+    image: '/workshop-images/TYPESCRIPT_WORKSHOP.jpeg',
+    skills: ['TypeScript', 'Node.js', 'React', 'SQL'],
+    tutorials: [
+      'Part 1: Strongly typed API design with Node/Express',
+      'Part 2: React + TypeScript UI development',
+      'Part 3: Database integration and deployment',
+    ],
   },
 ];
 

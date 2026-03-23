@@ -4,6 +4,7 @@ interface User {
   id: string;
   name: string;
   email: string;
+  role: 'user' | 'admin';
 }
 
 interface AuthContextType {
@@ -12,6 +13,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => boolean;
   logout: () => void;
   isAuthenticated: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,19 +39,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    // Create new user
+    // Create new user (role user)
     const newUser = {
       id: Date.now().toString(),
       name,
       email,
       password, // In a real app, this would be hashed
+      role: 'user' as const,
     };
 
     users.push(newUser);
     localStorage.setItem('users', JSON.stringify(users));
 
     // Auto-login after registration
-    const userWithoutPassword = { id: newUser.id, name: newUser.name, email: newUser.email };
+    const userWithoutPassword = { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role };
     setUser(userWithoutPassword);
     localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
 
@@ -57,13 +60,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = (email: string, password: string): boolean => {
+    // Admin static credentials
+    if (email.toLowerCase() === 'admin@workshophub.com' && password === 'admin123') {
+      const adminUser = { id: 'admin-1', name: 'Admin', email: 'admin@workshophub.com', role: 'admin' as const };
+      setUser(adminUser);
+      localStorage.setItem('currentUser', JSON.stringify(adminUser));
+      return true;
+    }
+
     const usersData = localStorage.getItem('users');
     const users = usersData ? JSON.parse(usersData) : [];
 
     const foundUser = users.find((u: any) => u.email === email && u.password === password);
 
     if (foundUser) {
-      const userWithoutPassword = { id: foundUser.id, name: foundUser.name, email: foundUser.email };
+      const userWithoutPassword = {
+        id: foundUser.id,
+        name: foundUser.name,
+        email: foundUser.email,
+        role: foundUser.role || 'user',
+      };
       setUser(userWithoutPassword);
       localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
       return true;
@@ -85,6 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         isAuthenticated: !!user,
+        isAdmin: user?.role === 'admin',
       }}
     >
       {children}

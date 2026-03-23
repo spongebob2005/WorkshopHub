@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from './ui/button';
-import { LogOut, User, Calendar, Home, Menu, X, Sparkles } from 'lucide-react';
+import { LogOut, User, Calendar, Home, Menu, X, Sparkles, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const Navbar = () => {
@@ -31,6 +31,7 @@ export const Navbar = () => {
     ? [
         { to: '/', label: 'Workshops', icon: Home },
         { to: '/bookings', label: 'My Bookings', icon: Calendar },
+        ...(user?.role === 'admin' ? [{ to: '/admin', label: 'Admin', icon: ShieldCheck }] : []),
       ]
     : [];
 

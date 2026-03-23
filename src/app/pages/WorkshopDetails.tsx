@@ -23,9 +23,15 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
 export const WorkshopDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getWorkshopById } = useWorkshops();
-  const { isAuthenticated } = useAuth();
+  const { getWorkshopById, getBookingsByUser } = useWorkshops();
+  const { isAuthenticated, user } = useAuth();
   const workshop = getWorkshopById(id!);
+  const userHasBooking = Boolean(
+    user &&
+      getBookingsByUser(user.id).some(
+        b => b.workshopId === id && b.status === 'confirmed'
+      )
+  );
 
   if (!workshop) {
     return (
@@ -165,6 +171,28 @@ export const WorkshopDetails = () => {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Tutorials */}
+            <div className="bg-white rounded-2xl border border-indigo-100 shadow-sm p-6">
+              <h2 className="text-lg text-gray-900 mb-4 flex items-center gap-2">
+                <BookOpen className="size-5 text-indigo-500" />
+                Course Tutorials
+              </h2>
+              {userHasBooking ? (
+                <ul className="space-y-2 text-sm text-gray-700">
+                  {workshop.tutorials?.map((item, idx) => (
+                    <li key={idx} className="flex gap-2 items-start">
+                      <span className="mt-0.5 text-indigo-600">•</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  Register for this workshop to unlock step-by-step tutorials and resources.
+                </p>
+              )}
             </div>
           </motion.div>
 

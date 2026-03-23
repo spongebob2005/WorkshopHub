@@ -10,6 +10,7 @@ import { WorkshopDetails } from './pages/WorkshopDetails';
 import { Payment } from './pages/Payment';
 import { PaymentSuccess } from './pages/PaymentSuccess';
 import { BookingHistory } from './pages/BookingHistory';
+import { AdminDashboard } from './pages/AdminDashboard';
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
@@ -65,6 +66,16 @@ export const router = createBrowserRouter([
       <Layout>
         <ProtectedRoute>
           <PaymentSuccess />
+        </ProtectedRoute>
+      </Layout>
+    ),
+  },
+  {
+    path: '/admin',
+    element: (
+      <Layout>
+        <ProtectedRoute requiredRole="admin">
+          <AdminDashboard />
         </ProtectedRoute>
       </Layout>
     ),
