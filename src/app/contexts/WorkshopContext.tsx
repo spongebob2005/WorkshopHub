@@ -51,7 +51,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 89.99,
     totalSeats: 50,
     availableSeats: 50,
-    image: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&h=600&fit=crop&crop=center',
+    image: '/workshop-images/REACT_WORKSHOP.jpeg',
     skills: ['React', 'JavaScript', 'State Management', 'Hooks'],
   },
   {
@@ -66,7 +66,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 79.99,
     totalSeats: 40,
     availableSeats: 35,
-    image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=800&h=600&fit=crop&crop=center',
+    image: '/workshop-images/UI_UX_WORKSHOP.jpeg',
     skills: ['Figma', 'User Research', 'Prototyping', 'Accessibility'],
   },
   {
@@ -81,7 +81,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 99.99,
     totalSeats: 60,
     availableSeats: 42,
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=600&fit=crop&crop=center',
+    image: '/workshop-images/PYTHON_WORKSHOP.jpeg',
     skills: ['Python', 'Pandas', 'NumPy', 'Machine Learning'],
   },
   {
@@ -96,7 +96,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 69.99,
     totalSeats: 45,
     availableSeats: 28,
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&h=600&fit=crop&crop=center',
+    image: '/workshop-images/MARKETING_WORKSHOP.jpeg',
     skills: ['SEO', 'Content Marketing', 'Analytics', 'Social Media'],
   },
   {
@@ -111,7 +111,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 119.99,
     totalSeats: 35,
     availableSeats: 20,
-    image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop&crop=center',
+    image: '/workshop-images/AWS_WORKSHOP.jpeg',
     skills: ['AWS', 'Cloud Architecture', 'DevOps', 'Scalability'],
   },
   {
@@ -126,7 +126,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 94.99,
     totalSeats: 40,
     availableSeats: 38,
-    image: 'https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&h=600&fit=crop&crop=center',
+    image: '/workshop-images/REACT_NATIVE.jpeg',
     skills: ['React Native', 'Mobile Dev', 'iOS', 'Android'],
   },
   {
@@ -141,7 +141,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 84.99,
     totalSeats: 50,
     availableSeats: 45,
-    image: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&h=600&fit=crop&crop=center',
+    image: '/workshop-images/CYBER_SECURITY_WORKSHOP.jpeg',
     skills: ['Security', 'Encryption', 'Authentication', 'OWASP'],
   },
   {
@@ -156,7 +156,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 109.99,
     totalSeats: 30,
     availableSeats: 12,
-    image: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&h=600&fit=crop&crop=center',
+    image: '/workshop-images/BLOCK_CHAIN_WORKSHOP.jpeg',
     skills: ['Blockchain', 'Solidity', 'Web3', 'Smart Contracts'],
   },
 ];
