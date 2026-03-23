@@ -51,7 +51,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 89.99,
     totalSeats: 50,
     availableSeats: 50,
-    image: 'programming workspace laptop',
+    image: 'react javascript programming code development workspace laptop',
     skills: ['React', 'JavaScript', 'State Management', 'Hooks'],
   },
   {
@@ -66,7 +66,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 79.99,
     totalSeats: 40,
     availableSeats: 35,
-    image: 'ui design sketching wireframe',
+    image: 'ui ux design figma sketch wireframe tablet digital art',
     skills: ['Figma', 'User Research', 'Prototyping', 'Accessibility'],
   },
   {
@@ -81,7 +81,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 99.99,
     totalSeats: 60,
     availableSeats: 42,
-    image: 'data science analytics charts',
+    image: 'python data science analytics charts graphs statistics machine learning',
     skills: ['Python', 'Pandas', 'NumPy', 'Machine Learning'],
   },
   {
@@ -96,7 +96,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 69.99,
     totalSeats: 45,
     availableSeats: 28,
-    image: 'digital marketing social media',
+    image: 'digital marketing social media advertising strategy analytics growth',
     skills: ['SEO', 'Content Marketing', 'Analytics', 'Social Media'],
   },
   {
@@ -111,7 +111,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 119.99,
     totalSeats: 35,
     availableSeats: 20,
-    image: 'cloud computing servers technology',
+    image: 'aws cloud computing architecture servers infrastructure technology',
     skills: ['AWS', 'Cloud Architecture', 'DevOps', 'Scalability'],
   },
   {
@@ -126,7 +126,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 94.99,
     totalSeats: 40,
     availableSeats: 38,
-    image: 'mobile app development smartphone',
+    image: 'react native mobile app development smartphone ios android',
     skills: ['React Native', 'Mobile Dev', 'iOS', 'Android'],
   },
   {
@@ -141,7 +141,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 84.99,
     totalSeats: 50,
     availableSeats: 45,
-    image: 'cybersecurity network protection',
+    image: 'cybersecurity network security protection firewall encryption',
     skills: ['Security', 'Encryption', 'Authentication', 'OWASP'],
   },
   {
@@ -156,7 +156,7 @@ const INITIAL_WORKSHOPS: Workshop[] = [
     price: 109.99,
     totalSeats: 30,
     availableSeats: 12,
-    image: 'blockchain cryptocurrency technology',
+    image: 'blockchain cryptocurrency ethereum smart contracts defi web3',
     skills: ['Blockchain', 'Solidity', 'Web3', 'Smart Contracts'],
   },
 ];

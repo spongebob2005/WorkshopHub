@@ -53,9 +53,12 @@ export const WorkshopCard = ({ workshop }: WorkshopCardProps) => {
       className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/60 transition-shadow duration-300 flex flex-col h-full"
     >
       {/* Image */}
-      <div className={`relative h-48 overflow-hidden bg-gradient-to-br ${gradient}`}>
+      <div className={`relative h-52 overflow-hidden bg-gradient-to-br ${gradient} rounded-t-2xl`}>
         {!imgLoaded && (
-          <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200" />
+          <div className="absolute inset-0 animate-pulse">
+            <div className="w-full h-full bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-t-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-t-2xl" />
+          </div>
         )}
         <ImageWithFallback
           src={`https://source.unsplash.com/800x600/?${encodeURIComponent(workshop.image)}`}
@@ -63,24 +66,32 @@ export const WorkshopCard = ({ workshop }: WorkshopCardProps) => {
           className={`w-full h-full object-cover transition-all duration-700 group-hover:scale-110 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
           onLoad={() => setImgLoaded(true)}
         />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        {/* Enhanced gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent rounded-t-2xl" />
 
-        {/* Category badge */}
-        <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-medium ${categoryLight} backdrop-blur-sm`}>
-          {workshop.category}
-        </div>
-
-        {/* Price badge */}
-        <div className="absolute top-3 right-3 bg-white/95 backdrop-blur-sm rounded-xl px-2.5 py-1 flex items-center gap-0.5">
-          <DollarSign className="size-3 text-green-600" />
-          <span className="text-sm font-semibold text-green-700">{workshop.price}</span>
+        {/* Top badges */}
+        <div className="absolute top-4 left-4 right-4 flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            <div className={`px-3 py-1.5 rounded-xl text-xs font-semibold ${categoryLight} backdrop-blur-md shadow-lg`}>
+              {workshop.category}
+            </div>
+            {imgLoaded && (
+              <div className="bg-blue-500/90 backdrop-blur-md rounded-xl px-2 py-1 flex items-center gap-1 shadow-lg">
+                <div className="size-1.5 bg-white rounded-full animate-pulse" />
+                <span className="text-xs font-medium text-white">HD</span>
+              </div>
+            )}
+          </div>
+          <div className="bg-white/95 backdrop-blur-md rounded-xl px-3 py-1.5 flex items-center gap-1.5 shadow-lg">
+            <DollarSign className="size-4 text-green-600" />
+            <span className="text-sm font-bold text-green-700">{workshop.price}</span>
+          </div>
         </div>
 
         {/* Bottom overlay content */}
-        <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
-          <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium ${seatStatus.badge} backdrop-blur-sm`}>
-            <span className={`size-1.5 rounded-full ${seatStatus.dot}`} />
+        <div className="absolute bottom-4 left-4 right-4">
+          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold ${seatStatus.badge} backdrop-blur-md shadow-lg`}>
+            <span className={`size-2 rounded-full ${seatStatus.dot} animate-pulse`} />
             {seatStatus.text}
           </div>
         </div>

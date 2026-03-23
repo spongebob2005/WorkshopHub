@@ -169,7 +169,7 @@ export const Home = () => {
                 { icon: BookOpen, value: stats.total, label: 'Workshops' },
                 { icon: TrendingUp, value: stats.categories, label: 'Categories' },
                 { icon: Users, value: stats.available, label: 'Open Now' },
-                { icon: Zap, value: '100%', label: 'Online' },
+                { icon: Zap, value: 'HD Images', label: 'Visual Learning' },
               ].map(({ icon: Icon, value, label }, i) => (
                 <motion.div
                   key={label}
