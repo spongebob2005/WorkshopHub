@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
 import { useWorkshops } from '../contexts/WorkshopContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,8 +24,9 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
 export const WorkshopDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getWorkshopById, getBookingsByUser } = useWorkshops();
+  const { getWorkshopById, getBookingsByUser, getRegisteredUsersByWorkshop } = useWorkshops();
   const { isAuthenticated, user } = useAuth();
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
   const workshop = getWorkshopById(id!);
   const userHasBooking = Boolean(
     user &&
@@ -50,6 +52,7 @@ export const WorkshopDetails = () => {
 
   const seatPercentage = (workshop.availableSeats / workshop.totalSeats) * 100;
   const seatsBooked = workshop.totalSeats - workshop.availableSeats;
+  const registeredUsers = getRegisteredUsersByWorkshop(workshop.id);
   const gradient = CATEGORY_GRADIENTS[workshop.category] || 'from-indigo-600 to-purple-700';
 
   const getSeatInfo = () => {
@@ -57,6 +60,10 @@ export const WorkshopDetails = () => {
     if (seatPercentage > 20) return { color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200', bar: 'bg-yellow-500', text: 'Filling up fast!' };
     if (seatPercentage > 0) return { color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200', bar: 'bg-orange-500', text: 'Almost full!' };
     return { color: 'text-red-600', bg: 'bg-red-50 border-red-200', bar: 'bg-red-500', text: 'Sold out' };
+  };
+
+  const handleSelectAnswer = (questionId: string, answer: string) => {
+    setSelectedAnswers(prev => ({ ...prev, [questionId]: answer }));
   };
 
   const seatInfo = getSeatInfo();
@@ -173,25 +180,99 @@ export const WorkshopDetails = () => {
               </div>
             </div>
 
-            {/* Tutorials */}
+            {/* Tutorials + Learning Content */}
             <div className="bg-white rounded-2xl border border-indigo-100 shadow-sm p-6">
               <h2 className="text-lg text-gray-900 mb-4 flex items-center gap-2">
                 <BookOpen className="size-5 text-indigo-500" />
-                Course Tutorials
+                Learning Content
               </h2>
               {userHasBooking ? (
-                <ul className="space-y-2 text-sm text-gray-700">
-                  {workshop.tutorials?.map((item, idx) => (
-                    <li key={idx} className="flex gap-2 items-start">
-                      <span className="mt-0.5 text-indigo-600">•</span>
-                      <span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-2">Structured Tutorials</h3>
+                    <ul className="space-y-2 text-sm text-gray-700">
+                      {workshop.tutorials?.map((item, idx) => (
+                        <li key={idx} className="flex gap-2 items-start">
+                          <span className="mt-0.5 text-indigo-600">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-2">MCQ Practice</h3>
+                    {workshop.learningContent?.mcqTests?.length ? (
+                      <div className="space-y-4">
+                        {workshop.learningContent.mcqTests.map(test => (
+                          <div key={test.id} className="border border-gray-100 rounded-xl p-4">
+                            <p className="text-sm font-medium text-gray-900">{test.question}</p>
+                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {test.options.map(option => {
+                                const selected = selectedAnswers[test.id] === option;
+                                const correct = test.answer === option;
+                                return (
+                                  <button
+                                    key={option}
+                                    onClick={() => handleSelectAnswer(test.id, option)}
+                                    className={`text-left rounded-lg border px-3 py-2 text-sm font-medium ${
+                                      selected ? (correct ? 'border-green-500 bg-green-50 text-green-700' : 'border-red-500 bg-red-50 text-red-700') : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                                    }`}
+                                  >
+                                    {option}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {selectedAnswers[test.id] && (
+                              <p className="mt-2 text-xs font-medium text-gray-600">
+                                {selectedAnswers[test.id] === test.answer ? 'Correct ✅' : `Incorrect ❌ (Correct: ${test.answer})`}
+                              </p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">No MCQ currently available for this workshop.</p>
+                    )}
+                  </div>
+
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-800 mb-2">PDF Resources</h3>
+                    {workshop.learningContent?.pdfResources?.length ? (
+                      <ul className="space-y-2 text-sm text-blue-600">
+                        {workshop.learningContent.pdfResources.map(resource => (
+                          <li key={resource.id}>
+                            <a href={resource.url} target="_blank" rel="noreferrer" className="underline">
+                              {resource.title}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-gray-500">No PDF resources available yet.</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-800 mb-2">Video Resources</h3>
+                    {workshop.learningContent?.videoResources?.length ? (
+                      <ul className="space-y-2 text-sm text-gray-700">
+                        {workshop.learningContent.videoResources.map(resource => (
+                          <li key={resource.id}>
+                            <a href={resource.url} target="_blank" rel="noreferrer" className="text-indigo-600 underline">
+                              {resource.title}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-gray-500">No video resources available yet.</p>
+                    )}
+                  </div>
+                </>
               ) : (
-                <p className="text-sm text-gray-500">
-                  Register for this workshop to unlock step-by-step tutorials and resources.
-                </p>
+                <p className="text-sm text-gray-500">Register for this workshop to unlock tutorials, MCQs, PDFs, and videos.</p>
               )}
             </div>
           </motion.div>
@@ -257,6 +338,26 @@ export const WorkshopDetails = () => {
               <p className="text-xs text-gray-500 mt-2">
                 {seatsBooked} {seatsBooked === 1 ? 'person has' : 'people have'} already registered
               </p>
+            </div>
+
+            {/* Registered participants */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Registered Participants</h3>
+              {registeredUsers.length > 0 ? (
+                <ul className="space-y-1 text-sm text-gray-600">
+                  {registeredUsers.slice(0, 6).map(u => (
+                    <li key={u.id} className="flex items-center justify-between">
+                      <span>{u.name}</span>
+                      <span className="text-xs text-gray-400">{u.email}</span>
+                    </li>
+                  ))}
+                  {registeredUsers.length > 6 && (
+                    <li className="text-xs text-indigo-600">+{registeredUsers.length - 6} more participants</li>
+                  )}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500">No confirmed registrations yet.</p>
+              )}
             </div>
 
             {/* Instructor card */}

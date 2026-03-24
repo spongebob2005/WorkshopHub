@@ -9,8 +9,8 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => boolean;
-  register: (name: string, email: string, password: string) => boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -29,48 +29,63 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const register = (name: string, email: string, password: string): boolean => {
-    // Get existing users
-    const usersData = localStorage.getItem('users');
-    const users = usersData ? JSON.parse(usersData) : [];
+  const register = async (name: string, email: string, password: string): Promise<boolean> => {
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password }),
+      });
 
-    // Check if user already exists
-    if (users.find((u: any) => u.email === email)) {
+      if (!response.ok) {
+        return false;
+      }
+
+      const payload = await response.json();
+      const userWithoutPassword = {
+        id: payload.id,
+        name: payload.name,
+        email: payload.email,
+        role: payload.role || 'user',
+      };
+
+      setUser(userWithoutPassword);
+      localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
+      return true;
+    } catch (error) {
+      console.error('Register failed', error);
       return false;
     }
-
-    // Create new user (role user)
-    const newUser = {
-      id: Date.now().toString(),
-      name,
-      email,
-      password, // In a real app, this would be hashed
-      role: 'user' as const,
-    };
-
-    users.push(newUser);
-    localStorage.setItem('users', JSON.stringify(users));
-
-    // Auto-login after registration
-    const userWithoutPassword = { id: newUser.id, name: newUser.name, email: newUser.email, role: newUser.role };
-    setUser(userWithoutPassword);
-    localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
-
-    return true;
   };
 
-  const login = (email: string, password: string): boolean => {
-    // Admin static credentials
-    if (email.toLowerCase() === 'admin@workshophub.com' && password === 'admin123') {
-      const adminUser = { id: 'admin-1', name: 'Admin', email: 'admin@workshophub.com', role: 'admin' as const };
-      setUser(adminUser);
-      localStorage.setItem('currentUser', JSON.stringify(adminUser));
-      return true;
+  const login = async (email: string, password: string): Promise<boolean> => {
+    // first try backend auth
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        const payload = await response.json();
+        const userWithoutPassword = {
+          id: payload.id,
+          name: payload.name,
+          email: payload.email,
+          role: payload.role || 'user',
+        };
+        setUser(userWithoutPassword);
+        localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));
+        return true;
+      }
+    } catch (error) {
+      console.warn('Backend login unavailable, falling back to local storage auth', error);
     }
 
+    // fallback old localStorage auth for pre-backend users
     const usersData = localStorage.getItem('users');
     const users = usersData ? JSON.parse(usersData) : [];
-
     const foundUser = users.find((u: any) => u.email === email && u.password === password);
 
     if (foundUser) {

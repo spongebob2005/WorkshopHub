@@ -61,7 +61,7 @@ export const Register = () => {
     }
     setIsLoading(true);
     await new Promise(r => setTimeout(r, 600));
-    const success = register(name, email, password);
+    const success = await register(name, email, password);
     if (success) {
       toast.success('Account created successfully! Welcome aboard.');
       navigate('/', { replace: true });

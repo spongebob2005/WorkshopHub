@@ -45,6 +45,20 @@ export const AdminDashboard = () => {
     [enrichedBookings]
   );
 
+  const participantsByCategory = useMemo(() => {
+    const grouped: Record<string, Set<string>> = {};
+    enrichedBookings.forEach(booking => {
+      if (booking.status !== 'confirmed') return;
+      const category = booking.workshopCategory || 'Unknown';
+      grouped[category] = grouped[category] || new Set();
+      grouped[category].add(booking.userName);
+    });
+    return Object.entries(grouped).map(([category, names]) => ({
+      category,
+      names: Array.from(names),
+    }));
+  }, [enrichedBookings]);
+
   return (
     <div className="min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8 py-10">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -60,6 +74,28 @@ export const AdminDashboard = () => {
             <div className="rounded-xl bg-green-50 text-green-700 px-4 py-2 text-sm font-medium">
               Revenue: ${totalRevenue.toFixed(2)}
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-5">
+          <h2 className="text-lg font-semibold text-gray-800 mb-3">Participants by Category</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {participantsByCategory.length > 0 ? (
+              participantsByCategory.map(group => (
+                <div key={group.category} className="border border-gray-100 p-3 rounded-xl bg-gray-50">
+                  <p className="text-xs uppercase tracking-wider text-gray-500">{group.category}</p>
+                  <p className="font-semibold text-gray-800 text-sm mt-1 mb-2">{group.names.length} participants</p>
+                  <ul className="text-xs text-gray-600 leading-tight space-y-0.5">
+                    {group.names.slice(0, 4).map(name => (
+                      <li key={name}>• {name}</li>
+                    ))}
+                    {group.names.length > 4 && <li>+{group.names.length - 4} more</li>}
+                  </ul>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500">No confirmed participants yet.</p>
+            )}
           </div>
         </div>
 

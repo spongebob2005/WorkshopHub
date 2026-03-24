@@ -1,5 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
+export interface MCQItem {
+  id: string;
+  question: string;
+  options: string[];
+  answer: string;
+  explanation?: string;
+}
+
+export interface ContentResource {
+  id: string;
+  title: string;
+  url: string;
+}
+
+export interface LearningContent {
+  mcqTests: MCQItem[];
+  pdfResources: ContentResource[];
+  videoResources: ContentResource[];
+}
+
 export interface Workshop {
   id: string;
   title: string;
@@ -15,6 +35,7 @@ export interface Workshop {
   image: string;
   skills: string[];
   tutorials: string[];
+  learningContent: LearningContent;
 }
 
 export interface Booking {
@@ -27,14 +48,21 @@ export interface Booking {
   amount: number;
 }
 
+interface RegisteredUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
 interface WorkshopContextType {
   workshops: Workshop[];
   bookings: Booking[];
-  addBooking: (booking: Booking) => void;
+  addBooking: (booking: Booking) => Promise<boolean>;
   cancelBooking: (bookingId: string) => void;
   getBookingsByUser: (userId: string) => Booking[];
   getWorkshopById: (id: string) => Workshop | undefined;
   updateSeatAvailability: (workshopId: string, seatsToDeduct: number) => void;
+  getRegisteredUsersByWorkshop: (workshopId: string) => RegisteredUser[];
 }
 
 const WorkshopContext = createContext<WorkshopContextType | undefined>(undefined);
@@ -57,6 +85,11 @@ const normalizeAndSaveWorkshops = (workshops: Workshop[]) => {
     ...workshop,
     image: WORKSHOP_IMAGE_MAP[workshop.title] || workshop.image,
     tutorials: workshop.tutorials ?? [],
+    learningContent: workshop.learningContent ?? {
+      mcqTests: [],
+      pdfResources: [],
+      videoResources: [],
+    },
   }));
   localStorage.setItem('workshops', JSON.stringify(normalized));
   return normalized;
@@ -83,6 +116,31 @@ const INITIAL_WORKSHOPS: Workshop[] = [
       'Module 3: Performance Optimization Techniques',
       'Module 4: Architecture & Testing',
     ],
+    learningContent: {
+      mcqTests: [
+        {
+          id: 'r1',
+          question: 'What hook should you use for memoizing expensive calculations?',
+          options: ['useEffect', 'useMemo', 'useState', 'useContext'],
+          answer: 'useMemo',
+          explanation: 'useMemo memoizes a value across renders.',
+        },
+      ],
+      pdfResources: [
+        {
+          id: 'r1',
+          title: 'React Design Patterns (PDF)',
+          url: 'https://example.com/react-patterns.pdf',
+        },
+      ],
+      videoResources: [
+        {
+          id: 'r1',
+          title: 'Advanced React Hooks',
+          url: 'https://www.youtube.com/watch?v=dpw9EHDh2bM',
+        },
+      ],
+    },
   },
   {
     id: '2',
@@ -264,6 +322,94 @@ const INITIAL_WORKSHOPS: Workshop[] = [
       'Part 3: Database integration and deployment',
     ],
   },
+  {
+    id: '11',
+    title: 'UI Testing with Playwright',
+    instructor: 'Priya Sinha',
+    date: '2026-05-20',
+    time: '10:30 AM',
+    duration: '3 hours',
+    category: 'Quality Engineering',
+    description: 'Write end-to-end tests for web applications using Playwright, focusing on resilient selectors, parallel execution, and CI integration.',
+    price: 79.99,
+    totalSeats: 40,
+    availableSeats: 40,
+    image: '/workshop-images/UI_UX_WORKSHOP.jpeg',
+    skills: ['Testing', 'Playwright', 'E2E', 'CI/CD'],
+    tutorials: [
+      'Session 1: Playwright fundamentals and selectors',
+      'Session 2: Cross-browser parallelism and traces',
+      'Session 3: CI/CD pipeline integration and reporting',
+    ],
+    learningContent: {
+      mcqTests: [
+        {
+          id: 'p1',
+          question: 'Which command starts Playwright test runner for all browsers?',
+          options: ['npx playwright test', 'npx playwright run', 'npm test', 'npm start'],
+          answer: 'npx playwright test',
+        },
+      ],
+      pdfResources: [
+        {
+          id: 'p1',
+          title: 'Playwright Quickstart Guide',
+          url: 'https://example.com/playwright-guide.pdf',
+        },
+      ],
+      videoResources: [
+        {
+          id: 'p1',
+          title: 'Getting Started with Playwright',
+          url: 'https://www.youtube.com/watch?v=dqGnmraYSL0',
+        },
+      ],
+    },
+  },
+  {
+    id: '12',
+    title: 'Data Engineering with Docker & Kafka',
+    instructor: 'Frank Liu',
+    date: '2026-05-22',
+    time: '2:00 PM',
+    duration: '4 hours',
+    category: 'Data Engineering',
+    description: 'Architect data pipelines with containerization and Kafka, focusing on partitioning, throughput, and fault tolerance.',
+    price: 129.99,
+    totalSeats: 30,
+    availableSeats: 30,
+    image: '/workshop-images/AI_WORKSHOP.jpeg',
+    skills: ['Docker', 'Kafka', 'ETL', 'Data Pipelines'],
+    tutorials: [
+      'Chapter 1: Kafka topics, partitions, and consumer groups',
+      'Chapter 2: Dockerizing data microservices',
+      'Chapter 3: Stream processing with Kafka Streams',
+    ],
+    learningContent: {
+      mcqTests: [
+        {
+          id: 'd1',
+          question: 'In Kafka, what component ensures group message consumption?',
+          options: ['Broker', 'Producer', 'Consumer group', 'Zookeeper'],
+          answer: 'Consumer group',
+        },
+      ],
+      pdfResources: [
+        {
+          id: 'd1',
+          title: 'Kafka Architecture Deep Dive',
+          url: 'https://example.com/kafka-architecture.pdf',
+        },
+      ],
+      videoResources: [
+        {
+          id: 'd1',
+          title: 'Build Reliable Streaming Pipelines',
+          url: 'https://www.youtube.com/watch?v=1WhvlCICcxI',
+        },
+      ],
+    },
+  },
 ];
 
 export const WorkshopProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -271,27 +417,105 @@ export const WorkshopProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [bookings, setBookings] = useState<Booking[]>([]);
 
   useEffect(() => {
-    // Initialize workshops from localStorage or use defaults
-    const storedWorkshops = localStorage.getItem('workshops');
-    if (storedWorkshops) {
-      const parsed: Workshop[] = JSON.parse(storedWorkshops);
-      setWorkshops(normalizeAndSaveWorkshops(parsed));
-    } else {
-      const normalized = normalizeAndSaveWorkshops(INITIAL_WORKSHOPS);
-      setWorkshops(normalized);
-    }
+    const mergeWithDefaults = (base: Workshop[]) => {
+      const map = new Map(base.map(w => [w.id, w]));
+      const merged = INITIAL_WORKSHOPS.map(initial => map.get(initial.id) || initial);
+      const extra = base.filter(w => !map.has(w.id));
+      return normalizeAndSaveWorkshops([...merged, ...extra]);
+    };
 
-    // Load bookings from localStorage
-    const storedBookings = localStorage.getItem('bookings');
-    if (storedBookings) {
-      setBookings(JSON.parse(storedBookings));
-    }
+    const hydrate = async () => {
+      try {
+        const response = await fetch('/api/workshops');
+        if (!response.ok) throw new Error('Failed to fetch workshops from backend');
+        const apiWorkshops: Workshop[] = await response.json();
+        if (apiWorkshops && apiWorkshops.length > 0) {
+          setWorkshops(mergeWithDefaults(apiWorkshops));
+        }
+      } catch (err) {
+        const storedWorkshops = localStorage.getItem('workshops');
+        if (storedWorkshops) {
+          const parsed: Workshop[] = JSON.parse(storedWorkshops);
+          setWorkshops(mergeWithDefaults(parsed));
+        } else {
+          const normalized = normalizeAndSaveWorkshops(INITIAL_WORKSHOPS);
+          setWorkshops(normalized);
+        }
+      }
+
+      try {
+        const response = await fetch('/api/bookings');
+        if (response.ok) {
+          const apiBookings: Booking[] = await response.json();
+          setBookings(apiBookings.map(b => ({
+            id: b.id,
+            userId: (b as any).userId?._id || b.userId,
+            workshopId: (b as any).workshopId?._id || b.workshopId,
+            bookingDate: b.bookingDate,
+            paymentId: b.paymentId,
+            status: b.status,
+            amount: b.amount,
+          })));
+          localStorage.setItem('bookings', JSON.stringify(apiBookings));
+        } else {
+          const storedBookings = localStorage.getItem('bookings');
+          if (storedBookings) setBookings(JSON.parse(storedBookings));
+        }
+      } catch (err) {
+        const storedBookings = localStorage.getItem('bookings');
+        if (storedBookings) setBookings(JSON.parse(storedBookings));
+      }
+    };
+
+    hydrate();
   }, []);
 
-  const addBooking = (booking: Booking) => {
-    const newBookings = [...bookings, booking];
-    setBookings(newBookings);
-    localStorage.setItem('bookings', JSON.stringify(newBookings));
+  const addBooking = async (booking: Booking) => {
+    try {
+      const response = await fetch('/api/bookings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: booking.userId,
+          workshopId: booking.workshopId,
+          amount: booking.amount,
+        }),
+      });
+
+      if (!response.ok) {
+        return false;
+      }
+
+      const createdBooking = await response.json();
+      const bookingToUse: Booking = {
+        id: createdBooking._id || booking.id,
+        userId: (createdBooking.userId && createdBooking.userId._id) || booking.userId,
+        workshopId: (createdBooking.workshopId && createdBooking.workshopId._id) || booking.workshopId,
+        bookingDate: createdBooking.bookingDate || booking.bookingDate,
+        paymentId: createdBooking.paymentId || booking.paymentId,
+        status: createdBooking.status || booking.status,
+        amount: createdBooking.amount || booking.amount,
+      };
+
+      const newBookings = [...bookings, bookingToUse];
+      setBookings(newBookings);
+      localStorage.setItem('bookings', JSON.stringify(newBookings));
+
+      setWorkshops(prevWorkshops => {
+        const updated = prevWorkshops.map(w =>
+          w.id === booking.workshopId
+            ? { ...w, availableSeats: w.availableSeats - 1 }
+            : w
+        );
+        localStorage.setItem('workshops', JSON.stringify(updated));
+        return updated;
+      });
+
+      return true;
+    } catch (error) {
+      console.error('Error adding booking', error);
+      return false;
+    }
   };
 
   const cancelBooking = (bookingId: string) => {
@@ -317,6 +541,18 @@ export const WorkshopProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return workshops.find(w => w.id === id);
   };
 
+  const getRegisteredUsersByWorkshop = (workshopId: string): RegisteredUser[] => {
+    const usersData = localStorage.getItem('users');
+    const users = usersData ? JSON.parse(usersData) : [];
+    return users
+      .filter((u: any) =>
+        bookings.some(
+          b => b.workshopId === workshopId && b.userId === u.id && b.status === 'confirmed'
+        )
+      )
+      .map((u: any) => ({ id: u.id, name: u.name, email: u.email }));
+  };
+
   const updateSeatAvailability = (workshopId: string, seatsToDeduct: number) => {
     const updatedWorkshops = workshops.map(w =>
       w.id === workshopId
@@ -336,6 +572,7 @@ export const WorkshopProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         cancelBooking,
         getBookingsByUser,
         getWorkshopById,
+        getRegisteredUsersByWorkshop,
         updateSeatAvailability,
       }}
     >

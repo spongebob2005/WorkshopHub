@@ -36,7 +36,7 @@ export const Login = () => {
     }
     setIsLoading(true);
     await new Promise(r => setTimeout(r, 600));
-    const success = login(email, password);
+    const success = await login(email, password);
     if (success) {
       toast.success('Welcome back! Login successful.');
       navigate('/', { replace: true });

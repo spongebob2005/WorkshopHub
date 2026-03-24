@@ -55,7 +55,7 @@ export const Payment = () => {
       return;
     }
     setProcessing(true);
-    setTimeout(() => {
+    setTimeout(async () => {
       const paymentId = `PAY-${Date.now()}`;
       const booking = {
         id: `BKG-${Date.now()}`,
@@ -66,9 +66,13 @@ export const Payment = () => {
         status: 'confirmed' as const,
         amount: workshop.price,
       };
-      addBooking(booking);
-      updateSeatAvailability(workshop.id, 1);
-      navigate(`/payment-success/${booking.id}`);
+      const added = await addBooking(booking);
+      if (added) {
+        navigate(`/payment-success/${booking.id}`);
+      } else {
+        setError('Payment succeeded but there was an error registering booking. Please contact support.');
+      }
+      setProcessing(false);
     }, 2500);
   };
 

@@ -1,0 +1,24 @@
+[
+  {
+    "title": "Advanced React Patterns & Best Practices",
+    "instructor": "Sarah Johnson",
+    "date": "2026-04-15",
+    "time": "10:00 AM",
+    "duration": "3 hours",
+    "category": "Web Development",
+    "description": "Deep dive into advanced React patterns including Compound Components, Render Props, Custom Hooks, and State Management strategies.",
+    "price": 89.99,
+    "totalSeats": 50,
+    "availableSeats": 50,
+    "image": "/workshop-images/REACT_WORKSHOP.jpeg",
+    "skills": ["React", "JavaScript", "State Management", "Hooks"],
+    "tutorials": ["Module 1: Hooks & Custom Hooks", "Module 2: Context, Reducers & State Management", "Module 3: Performance Optimization Techniques", "Module 4: Architecture & Testing"],
+    "learningContent": {
+      "mcqTests": [
+        {"id": "r1", "question": "What hook should you use for memoizing expensive calculations?", "options": ["useEffect", "useMemo", "useState", "useContext"], "answer": "useMemo", "explanation": "useMemo memoizes values."}
+      ],
+      "pdfResources": [{"id": "r1", "title": "React Design Patterns (PDF)", "url": "https://example.com/react-patterns.pdf"}],
+      "videoResources": [{"id": "r1", "title": "Advanced React Hooks", "url": "https://www.youtube.com/watch?v=dpw9EHDh2bM"}]
+    }
+  }
+]
