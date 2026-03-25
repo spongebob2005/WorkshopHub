@@ -119,29 +119,30 @@ const INITIAL_WORKSHOPS: Workshop[] = [
       'Module 4: Architecture & Testing',
     ],
     learningContent: {
-      mcqTests: [
-        {
-          id: 'r1',
-          question: 'What hook should you use for memoizing expensive calculations?',
-          options: ['useEffect', 'useMemo', 'useState', 'useContext'],
-          answer: 'useMemo',
-          explanation: 'useMemo memoizes a value across renders.',
-        },
-      ],
-      pdfResources: [
-        {
-          id: 'r1',
-          title: 'React Design Patterns (PDF)',
-          url: 'https://example.com/react-patterns.pdf',
-        },
-      ],
       videoResources: [
         {
           id: 'r1',
-          title: 'Advanced React Hooks',
-          url: 'https://www.youtube.com/watch?v=dpw9EHDh2bM',
+          title: 'Design Patterns in React - YouTube',
+          url: 'https://youtu.be/MdvzlDIdQ0o?si=t9zq88dn8LqnOjxC',
+        },
+        {
+          id: 'r2',
+          title: 'Refactoring a react component - design pattern - YouTube',
+          url: 'https://youtu.be/PisA-OPisUY?si=aP2OW1TkZ24pSdqZ',
+        },
+        {
+          id: 'r3',
+          title: 'Single Responsibility Principle in React (Design Patterns) - YouTube',
+          url: 'https://youtu.be/tLPi3SPqUSE?si=vswYcXE-N_XLK6_7',
+        },
+        {
+          id: 'r4',
+          title: 'Custom Hooks in React (Design Patterns) - YouTube',
+          url: 'https://youtu.be/I2Bgi0Qcdvc?si=KUtpSYVjaG6iAAhy',
         },
       ],
+      mcqTests: [],
+      pdfResources: []
     },
   },
   {
