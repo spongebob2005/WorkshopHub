@@ -69,7 +69,7 @@ export const Home = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800">
+      <div className="relative overflow-hidden bg-linear-to-br from-indigo-900 via-purple-900 to-indigo-800">
         {/* Animated background orbs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
@@ -119,14 +119,14 @@ export const Home = () => {
             <h1 className="text-5xl md:text-6xl text-white mb-5 leading-tight tracking-tight">
               Level Up Your Skills{' '}
               <span className="relative inline-block">
-                <span className="bg-gradient-to-r from-yellow-300 via-orange-300 to-pink-300 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-yellow-300 via-orange-300 to-pink-300 bg-clip-text text-transparent">
                   Masterclass
                 </span>
                 <motion.div
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{ delay: 0.8, duration: 0.6 }}
-                  className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-yellow-300 to-pink-300 rounded-full origin-left"
+                  className="absolute -bottom-1 left-0 right-0 h-1 bg-linear-to-r from-yellow-300 to-pink-300 rounded-full origin-left"
                 />
               </span>
             </h1>
