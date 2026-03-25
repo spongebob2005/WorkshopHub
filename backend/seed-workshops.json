@@ -12,13 +12,620 @@
     "availableSeats": 50,
     "image": "/workshop-images/REACT_WORKSHOP.jpeg",
     "skills": ["React", "JavaScript", "State Management", "Hooks"],
-    "tutorials": ["Module 1: Hooks & Custom Hooks", "Module 2: Context, Reducers & State Management", "Module 3: Performance Optimization Techniques", "Module 4: Architecture & Testing"],
+    "tutorials": [
+      "Module 1: Advanced Hooks Architecture - useCallback, useMemo, useRef deep dive",
+      "Module 2: Context API & Performance - Context patterns, avoiding re-renders, useContext optimization",
+      "Module 3: Custom Hooks Patterns - Building reusable logic, hook composition, testing strategies",
+      "Module 4: Render Props & Higher Order Components - Patterns for code reuse, when to use each",
+      "Module 5: State Management Strategies - Redux patterns, Zustand, Recoil comparison",
+      "Module 6: Performance Optimization - Code splitting, lazy loading, memo strategies, profiling",
+      "Module 7: Architecture Patterns - Component composition, folder structure, testing",
+      "Module 8: Real-world Applications - Building scalable apps, pattern selection guide"
+    ],
     "learningContent": {
       "mcqTests": [
-        {"id": "r1", "question": "What hook should you use for memoizing expensive calculations?", "options": ["useEffect", "useMemo", "useState", "useContext"], "answer": "useMemo", "explanation": "useMemo memoizes values."}
+        {
+          "id": "r1",
+          "question": "Which hook should you use for memoizing expensive calculations to prevent unnecessary recomputation?",
+          "options": ["useEffect", "useMemo", "useState", "useRef"],
+          "answer": "useMemo",
+          "explanation": "useMemo memoizes the computed value and only recomputes when dependencies change. useEffect is for side effects, useState for state, and useRef for mutable references."
+        },
+        {
+          "id": "r2",
+          "question": "When using useCallback, what is the primary purpose?",
+          "options": ["To memoize function definitions", "To prevent infinite loops", "To cache function results", "To manage component lifecycle"],
+          "answer": "To memoize function definitions",
+          "explanation": "useCallback memoizes the function definition itself so it maintains referential equality across renders, preventing unnecessary re-renders of child components that depend on the function."
+        },
+        {
+          "id": "r3",
+          "question": "What is the main drawback of using Context API directly for global state?",
+          "options": ["It doesn't support async operations", "All consumers re-render when context changes", "It requires more boilerplate than useState", "It can't store complex objects"],
+          "answer": "All consumers re-render when context changes",
+          "explanation": "When Context value changes, ALL components consuming that context re-render, even if they only use a small part of it. This can hurt performance. Solutions include splitting contexts or using useMemo with useContext."
+        },
+        {
+          "id": "r4",
+          "question": "Which pattern is best for sharing complex state management logic across multiple components?",
+          "options": ["Prop drilling", "Custom Hooks", "Class components with inheritance", "Global variables"],
+          "answer": "Custom Hooks",
+          "explanation": "Custom hooks allow you to extract and reuse stateful logic across components cleanly. They enable better code organization, testability, and maintainability compared to other approaches."
+        },
+        {
+          "id": "r5",
+          "question": "In a Render Props pattern, what is passed as a prop to enable dynamic component rendering?",
+          "options": ["A component class", "A function that returns JSX", "An array of elements", "A string describing the component"],
+          "answer": "A function that returns JSX",
+          "explanation": "Render Props pattern uses a function prop that the component calls to render its output. This gives the parent component control over what gets rendered while the child manages state/logic."
+        },
+        {
+          "id": "r6",
+          "question": "What tool would you use to analyze and identify performance bottlenecks in a React application?",
+          "options": ["Redux DevTools", "React DevTools Profiler", "Browser DevTools Console", "Webpack analyzer"],
+          "answer": "React DevTools Profiler",
+          "explanation": "React DevTools Profiler shows how long components take to render and which components are being re-rendered unnecessarily, helping identify performance issues."
+        }
       ],
-      "pdfResources": [{"id": "r1", "title": "React Design Patterns (PDF)", "url": "https://example.com/react-patterns.pdf"}],
-      "videoResources": [{"id": "r1", "title": "Advanced React Hooks", "url": "https://www.youtube.com/watch?v=dpw9EHDh2bM"}]
+      "pdfResources": [
+        {"id": "r1", "title": "React Hooks API Reference & Patterns", "url": "https://react.dev/reference/react"},
+        {"id": "r2", "title": "Performance Optimization Techniques in React", "url": "https://react.dev/reference/react/useMemo"},
+        {"id": "r3", "title": "State Management Architecture Guide", "url": "https://react.dev/learn/managing-state"},
+        {"id": "r4", "title": "Custom Hooks & Logic Extraction", "url": "https://react.dev/learn/reusing-logic-with-custom-hooks"},
+        {"id": "r5", "title": "Testing React Components & Hooks", "url": "https://testing-library.com/docs/react-testing-library/intro/"}
+      ],
+      "videoResources": [
+        {"id": "r1", "title": "Advanced React Hooks Deep Dive", "url": "https://www.youtube.com/watch?v=dpw9EHDh2bM"},
+        {"id": "r2", "title": "React Performance Optimization Strategies", "url": "https://www.youtube.com/watch?v=0ZKhLFjpmVs"},
+        {"id": "r3", "title": "State Management Patterns Comparison", "url": "https://www.youtube.com/watch?v=XFxF4ET8RlI"},
+        {"id": "r4", "title": "Custom Hooks Patterns Tutorial", "url": "https://www.youtube.com/watch?v=J0asqNaIj_w"},
+        {"id": "r5", "title": "Render Props Pattern Explained", "url": "https://www.youtube.com/watch?v=r6Tcyw4alys"}
+      ]
+    }
+  },
+  {
+    "title": "TypeScript for Full-Stack Development",
+    "instructor": "Michael Chen",
+    "date": "2026-04-22",
+    "time": "2:00 PM",
+    "duration": "4 hours",
+    "category": "Web Development",
+    "description": "Master TypeScript from basics to advanced patterns. Learn type systems, interfaces, generics, and how to use TypeScript effectively in both frontend and backend applications.",
+    "price": 79.99,
+    "totalSeats": 45,
+    "availableSeats": 45,
+    "image": "/workshop-images/TYPESCRIPT_WORKSHOP.jpeg",
+    "skills": ["TypeScript", "Type System", "Generics", "Advanced Types", "Full-Stack Development"],
+    "tutorials": [
+      "Module 1: TypeScript Fundamentals - Setup, basic types, type inference",
+      "Module 2: Interfaces & Type Aliases - Structural typing, complex types, decorators",
+      "Module 3: Generics Mastery - Generic functions, classes, constraints, variance",
+      "Module 4: Advanced Types - Union types, intersection types, mapped types, conditional types",
+      "Module 5: Utility Types & Patterns - Partial, Readonly, Pick, Omit, Record, custom utilities",
+      "Module 6: Frontend Integration - React with TypeScript, component typing, hooks",
+      "Module 7: Backend Integration - Node.js/Express typing, API contracts, validation",
+      "Module 8: Testing & Type Safety - Testing typed code, type guards, assertion functions"
+    ],
+    "learningContent": {
+      "mcqTests": [
+        {
+          "id": "ts1",
+          "question": "What is the difference between a 'type' and an 'interface' in TypeScript?",
+          "options": [
+            "Types can use unions, interfaces cannot",
+            "Interfaces can be merged, types cannot",
+            "Types are only for primitives, interfaces for objects",
+            "There is no practical difference"
+          ],
+          "answer": "Interfaces can be merged, types cannot",
+          "explanation": "Interfaces support declaration merging (you can declare the same interface multiple times and they combine), while types cannot be merged. Both can represent object shapes, but interfaces are more commonly used for object structures."
+        },
+        {
+          "id": "ts2",
+          "question": "What does 'keyof' operator do in TypeScript?",
+          "options": [
+            "Retrieves object property values",
+            "Creates a union type of all keys of an object type",
+            "Checks if a key exists in an object",
+            "Filters object keys based on a condition"
+          ],
+          "answer": "Creates a union type of all keys of an object type",
+          "explanation": "'keyof' creates a union type containing all property names of a type. For example, 'keyof {a: 1, b: 2}' results in 'a' | 'b'."
+        },
+        {
+          "id": "ts3",
+          "question": "What is a generic constraint used for?",
+          "options": [
+            "To limit the types that can be used with a generic",
+            "To enforce runtime checks",
+            "To improve performance",
+            "To reduce code size"
+          ],
+          "answer": "To limit the types that can be used with a generic",
+          "explanation": "Generic constraints use the 'extends' keyword to limit what types can be passed to a generic. For example, <T extends string> means T can only be string or string-related types."
+        },
+        {
+          "id": "ts4",
+          "question": "Which utility type creates a new type where all properties are optional?",
+          "options": ["Partial", "Pick", "Readonly", "Record"],
+          "answer": "Partial",
+          "explanation": "Partial<T> takes a type and makes all its properties optional. Useful for functions that update partial object properties."
+        },
+        {
+          "id": "ts5",
+          "question": "What is a type guard function and what keyword is commonly used?",
+          "options": [
+            "A function using 'extends' to check inheritance",
+            "A predicate function using 'is' keyword for type narrowing",
+            "A function that validates at runtime only",
+            "Deprecated - no longer used in TypeScript"
+          ],
+          "answer": "A predicate function using 'is' keyword for type narrowing",
+          "explanation": "Type guards are functions that return 'x is Type' (type predicate). They help TypeScript narrow types after checking, improving type safety in conditional logic."
+        },
+        {
+          "id": "ts6",
+          "question": "How would you create a type for an object with dynamic string keys and number values?",
+          "options": [
+            "{ [key: string]: number }",
+            "{ keys: string[], values: number[] }",
+            "Record<string, number>",
+            "Both option A and C are correct"
+          ],
+          "answer": "Both option A and C are correct",
+          "explanation": "Both { [key: string]: number } and Record<string, number> are equivalent ways to define index signatures for dynamic keys. Record is more readable and is the modern approach."
+        }
+      ],
+      "pdfResources": [
+        {"id": "ts1", "title": "TypeScript Handbook - Complete Guide", "url": "https://www.typescriptlang.org/docs/handbook/"},
+        {"id": "ts2", "title": "Advanced Type System Patterns", "url": "https://www.typescriptlang.org/docs/handbook/utility-types.html"},
+        {"id": "ts3", "title": "Generics in Depth - Type Parameters & Constraints", "url": "https://www.typescriptlang.org/docs/handbook/2/generics.html"},
+        {"id": "ts4", "title": "React with TypeScript Best Practices", "url": "https://react.dev/learn/typescript"},
+        {"id": "ts5", "title": "Type Checking Strategies & Patterns", "url": "https://www.typescriptlang.org/docs/handbook/2/narrowing.html"}
+      ],
+      "videoResources": [
+        {"id": "ts1", "title": "TypeScript Complete Tutorial for Beginners to Advanced", "url": "https://www.youtube.com/watch?v=d56mHESJ2DE"},
+        {"id": "ts2", "title": "Generics in TypeScript Explained", "url": "https://www.youtube.com/watch?v=nViEqpgwxHE"},
+        {"id": "ts3", "title": "Advanced TypeScript Patterns and Techniques", "url": "https://www.youtube.com/watch?v=4oHEqRZDwP4"},
+        {"id": "ts4", "title": "TypeScript with React - Complete Guide", "url": "https://www.youtube.com/watch?v=BLvgT4uWJSA"},
+        {"id": "ts5", "title": "Utility Types Deep Dive", "url": "https://www.youtube.com/watch?v=_r6Dvm3vyGk"}
+      ]
+    }
+  },
+  {
+    "title": "Node.js & Express Backend Architecture",
+    "instructor": "David Rodriguez",
+    "date": "2026-04-29",
+    "time": "11:00 AM",
+    "duration": "4 hours",
+    "category": "Web Development",
+    "description": "Build scalable backend applications with Node.js and Express. Learn middleware patterns, API design, authentication, database integration, and deployment strategies.",
+    "price": 84.99,
+    "totalSeats": 40,
+    "availableSeats": 40,
+    "image": "/workshop-images/NODEJS_WORKSHOP.jpeg",
+    "skills": ["Node.js", "Express", "REST APIs", "Authentication", "Database Design", "Deployment"],
+    "tutorials": [
+      "Module 1: Node.js Fundamentals - Event loop, async/await, streams, modules",
+      "Module 2: Express Framework Deep Dive - Routing, middleware, request/response handling",
+      "Module 3: REST API Design Principles - HTTP methods, status codes, versioning, documentation",
+      "Module 4: Authentication & Authorization - JWT, sessions, OAuth, role-based access",
+      "Module 5: Database Integration - Connection pooling, query optimization, transactions, ORMs",
+      "Module 6: Error Handling & Logging - Global error handlers, structured logging, monitoring",
+      "Module 7: Testing Backend Code - Unit tests, integration tests, mocking, coverage",
+      "Module 8: Deployment & DevOps - Docker, CI/CD, environment management, scaling"
+    ],
+    "learningContent": {
+      "mcqTests": [
+        {
+          "id": "node1",
+          "question": "What is the primary purpose of middleware in Express?",
+          "options": [
+            "To handle HTTP requests in a pipeline before reaching route handlers",
+            "To store data between requests",
+            "To execute database queries",
+            "To compress response data"
+          ],
+          "answer": "To handle HTTP requests in a pipeline before reaching route handlers",
+          "explanation": "Middleware functions execute in sequence and can modify request/response objects or end the request cycle. They're essential for logging, authentication, validation, etc."
+        },
+        {
+          "id": "node2",
+          "question": "What is the event loop in Node.js and why is it important?",
+          "options": [
+            "A debugging tool for tracking function calls",
+            "The mechanism that manages asynchronous operations and non-blocking I/O",
+            "A scheduling system for background tasks only",
+            "A feature specific to Express framework"
+          ],
+          "answer": "The mechanism that manages asynchronous operations and non-blocking I/O",
+          "explanation": "The event loop is core to Node.js allowing it to be single-threaded yet handle thousands of concurrent connections through asynchronous I/O operations."
+        },
+        {
+          "id": "node3",
+          "question": "What HTTP status code should you return when creating a new resource via POST?",
+          "options": ["200 OK", "201 Created", "202 Accepted", "204 No Content"],
+          "answer": "201 Created",
+          "explanation": "201 Created indicates the resource was successfully created and should include the location of the new resource. 200 is for successful requests without creation."
+        },
+        {
+          "id": "node4",
+          "question": "What does JWT (JSON Web Token) consist of?",
+          "options": [
+            "Header, Payload, Signature",
+            "Username, Password, Expiry",
+            "Request, Response, Middleware",
+            "Client, Server, Database"
+          ],
+          "answer": "Header, Payload, Signature",
+          "explanation": "JWT has 3 parts separated by dots: Header (algorithm/type), Payload (claims/data), and Signature (encoded header+payload with secret)."
+        },
+        {
+          "id": "node5",
+          "question": "How would you handle database connection pooling?",
+          "options": [
+            "Create a new connection for each request",
+            "Use one global connection for the entire app",
+            "Maintain a pool of reusable connections managed by a pool manager",
+            "Use different databases for each request"
+          ],
+          "answer": "Maintain a pool of reusable connections managed by a pool manager",
+          "explanation": "Connection pooling reuses database connections efficiently, avoiding the overhead of creating/destroying connections for each request while limiting total connections."
+        },
+        {
+          "id": "node6",
+          "question": "What is the purpose of structured logging in a production backend?",
+          "options": [
+            "To make logs prettier in console",
+            "To store logs in JSON format for easy parsing, searching, and monitoring",
+            "To reduce log file size",
+            "To log every database query"
+          ],
+          "answer": "To store logs in JSON format for easy parsing, searching, and monitoring",
+          "explanation": "Structured logging (JSON format) with fields like timestamp, level, context enables automated log aggregation, searchability, and integration with monitoring tools."
+        }
+      ],
+      "pdfResources": [
+        {"id": "node1", "title": "Node.js Official Documentation", "url": "https://nodejs.org/en/docs/"},
+        {"id": "node2", "title": "Express.js Framework Guide", "url": "https://expressjs.com/"},
+        {"id": "node3", "title": "REST API Design Best Practices", "url": "https://restfulapi.net/"},
+        {"id": "node4", "title": "JWT Authentication Implementation", "url": "https://jwt.io/introduction"},
+        {"id": "node5", "title": "Database Optimization Techniques", "url": "https://use-the-index-luke.com/"}
+      ],
+      "videoResources": [
+        {"id": "node1", "title": "Node.js Complete Course for Beginners", "url": "https://www.youtube.com/watch?v=f2EqECiTBL8"},
+        {"id": "node2", "title": "Express.js Tutorial - Build REST API", "url": "https://www.youtube.com/watch?v=L72fhGm1tfE"},
+        {"id": "node3", "title": "Understanding Event Loop in Node.js", "url": "https://www.youtube.com/watch?v=8aGhZQkoFbQ"},
+        {"id": "node4", "title": "JWT Authentication Tutorial", "url": "https://www.youtube.com/watch?v=7q_DcVLiJfM"},
+        {"id": "node5", "title": "Building Scalable Node.js Applications", "url": "https://www.youtube.com/watch?v=nIHIoKrm9h4"}
+      ]
+    }
+  },
+  {
+    "title": "Database Design & SQL Optimization",
+    "instructor": "Emily Watson",
+    "date": "2026-05-06",
+    "time": "3:00 PM",
+    "duration": "3.5 hours",
+    "category": "Data Science",
+    "description": "Master database design principles, normalization, indexing strategies, and SQL query optimization to build high-performance applications.",
+    "price": 74.99,
+    "totalSeats": 35,
+    "availableSeats": 35,
+    "image": "/workshop-images/DATABASE_WORKSHOP.jpeg",
+    "skills": ["SQL", "Database Design", "Indexing", "Query Optimization", "Normalization"],
+    "tutorials": [
+      "Module 1: Relational Database Concepts - Tables, relationships, constraints, keys",
+      "Module 2: Normalization & Schema Design - Normal forms, avoiding redundancy, referential integrity",
+      "Module 3: Indexing Strategies - B-tree indexes, covering indexes, composite indexes, index design",
+      "Module 4: Query Optimization - Execution plans, EXPLAIN analysis, query tuning patterns",
+      "Module 5: SQL Performance - JOIN optimization, subqueries, window functions, query patterns",
+      "Module 6: Transactions & ACID Properties - Isolation levels, deadlock handling, consistency",
+      "Module 7: Scaling Databases - Partitioning, replication, sharding strategies",
+      "Module 8: Monitoring & Troubleshooting - Performance metrics, slow query logs, optimization tools"
+    ],
+    "learningContent": {
+      "mcqTests": [
+        {
+          "id": "db1",
+          "question": "What is the primary purpose of database normalization?",
+          "options": [
+            "To improve query speed",
+            "To reduce data redundancy and improve data integrity",
+            "To decrease storage size",
+            "To support multiple concurrent users"
+          ],
+          "answer": "To reduce data redundancy and improve data integrity",
+          "explanation": "Normalization eliminates data redundancy and establishes consistent dependencies to maintain data integrity. While it may increase query complexity, it prevents anomalies and maintains consistency."
+        },
+        {
+          "id": "db2",
+          "question": "What is a covering index?",
+          "options": [
+            "An index that covers all tables in the database",
+            "An index that contains all columns needed to satisfy a query without accessing the main table",
+            "An index for preventing NULL values",
+            "An index on multiple tables simultaneously"
+          ],
+          "answer": "An index that contains all columns needed to satisfy a query without accessing the main table",
+          "explanation": "A covering index stores all columns needed for a query, allowing the database to fetch results directly from the index without accessing the table (index-only scan)."
+        },
+        {
+          "id": "db3",
+          "question": "Which normal form requires that all attributes depend on the primary key and no other attributes?",
+          "options": ["1NF", "2NF", "3NF", "BCNF"],
+          "answer": "3NF",
+          "explanation": "Third Normal Form (3NF) requires removing transitive dependencies - all attributes must depend directly on the primary key. BCNF is even stricter for edge cases."
+        },
+        {
+          "id": "db4",
+          "question": "What does EXPLAIN command show in SQL?",
+          "options": [
+            "How to write SQL queries",
+            "The execution plan and strategy the database will use",
+            "Error messages in queries",
+            "Column definitions"
+          ],
+          "answer": "The execution plan and strategy the database will use",
+          "explanation": "EXPLAIN shows the query execution plan including which indexes are used, scan types, and estimated costs - essential for optimization analysis."
+        },
+        {
+          "id": "db5",
+          "question": "What is a deadlock in database transactions?",
+          "options": [
+            "When a query takes too long",
+            "When two transactions wait for each other to release locks",
+            "When the database runs out of memory",
+            "When a connection is lost"
+          ],
+          "answer": "When two transactions wait for each other to release locks",
+          "explanation": "A deadlock occurs when Transaction A holds lock on Resource 1 and waits for Resource 2 (held by Transaction B), while Transaction B waits for Resource 1."
+        },
+        {
+          "id": "db6",
+          "question": "What is database sharding used for?",
+          "options": [
+            "Backing up data",
+            "Increasing query speed on single server",
+            "Distributing data across multiple databases/servers by a key",
+            "Encrypting sensitive data"
+          ],
+          "answer": "Distributing data across multiple databases/servers by a key",
+          "explanation": "Sharding partitions data horizontally across multiple database instances based on a shard key, enabling horizontal scaling for very large datasets."
+        }
+      ],
+      "pdfResources": [
+        {"id": "db1", "title": "Database Design & Normalization Guide", "url": "https://en.wikipedia.org/wiki/Database_normalization"},
+        {"id": "db2", "title": "SQL Performance Tuning Techniques", "url": "https://use-the-index-luke.com/"},
+        {"id": "db3", "title": "Indexing Strategies for SQL Databases", "url": "https://dev.mysql.com/doc/refman/8.0/en/optimization-indexes.html"},
+        {"id": "db4", "title": "Query Optimization & EXPLAIN Analysis", "url": "https://postgresql.org/docs/current/sql-explain.html"},
+        {"id": "db5", "title": "Transaction Isolation Levels & ACID Properties", "url": "https://en.wikipedia.org/wiki/ACID"}
+      ],
+      "videoResources": [
+        {"id": "db1", "title": "Complete SQL Tutorial for Learning", "url": "https://www.youtube.com/watch?v=HXV3zeQKqGY"},
+        {"id": "db2", "title": "Database Normalization Explained", "url": "https://www.youtube.com/watch?v=uy3I0xX-Twc"},
+        {"id": "db3", "title": "SQL Query Optimization Techniques", "url": "https://www.youtube.com/watch?v=_8Vv7fN4hTQ"},
+        {"id": "db4", "title": "Indexing Strategies Tutorial", "url": "https://www.youtube.com/watch?v=C_q5UJrxcck"},
+        {"id": "db5", "title": "ACID Properties & Transactions Explained", "url": "https://www.youtube.com/watch?v=yEKtJGha3ic"}
+      ]
+    }
+  },
+  {
+    "title": "Cloud Architecture with AWS",
+    "instructor": "James Kumar",
+    "date": "2026-05-13",
+    "time": "10:30 AM",
+    "duration": "4 hours",
+    "category": "Cloud Computing",
+    "description": "Learn to design and deploy scalable cloud applications using AWS services. Cover EC2, S3, Lambda, RDS, and architectural patterns for high-availability systems.",
+    "price": 99.99,
+    "totalSeats": 30,
+    "availableSeats": 30,
+    "image": "/workshop-images/AWS_WORKSHOP.jpeg",
+    "skills": ["AWS", "Cloud Architecture", "Scalability", "Infrastructure as Code", "DevOps"],
+    "tutorials": [
+      "Module 1: AWS Fundamentals - Regions, availability zones, resource tagging, cost management",
+      "Module 2: Compute Services - EC2 instances, auto-scaling, load balancing, deployment strategies",
+      "Module 3: Storage & Databases - S3, EBS, RDS, DynamoDB, choosing appropriate services",
+      "Module 4: Networking & Security - VPC, security groups, IAM policies, encryption best practices",
+      "Module 5: Serverless Architecture - Lambda functions, API Gateway, DynamoDB streams, event-driven design",
+      "Module 6: Infrastructure as Code - CloudFormation, Terraform, template design patterns",
+      "Module 7: Monitoring & Logging - CloudWatch, X-Ray, alarms, performance metrics",
+      "Module 8: Architectural Patterns - Multi-tier apps, microservices, disaster recovery, cost optimization"
+    ],
+    "learningContent": {
+      "mcqTests": [
+        {
+          "id": "aws1",
+          "question": "What is the primary purpose of AWS Auto Scaling?",
+          "options": [
+            "To backup your data automatically",
+            "To automatically adjust capacity based on demand",
+            "To encrypt data in transit",
+            "To distribute traffic across regions"
+          ],
+          "answer": "To automatically adjust capacity based on demand",
+          "explanation": "Auto Scaling adds or removes EC2 instances based on metrics (CPU, load, custom metrics) to match demand, optimizing cost and performance."
+        },
+        {
+          "id": "aws2",
+          "question": "Which AWS service would you use for long-running background jobs without managing servers?",
+          "options": ["EC2", "Lambda", "S3", "RDS"],
+          "answer": "Lambda",
+          "explanation": "Lambda lets you run code in response to events without provisioning or managing servers. It's ideal for asynchronous tasks, but has a 15-minute timeout limit."
+        },
+        {
+          "id": "aws3",
+          "question": "What does a VPC (Virtual Private Cloud) provide?",
+          "options": [
+            "Virtual machine instances",
+            "A logically isolated network environment within AWS",
+            "Database instances only",
+            "Load balancing services"
+          ],
+          "answer": "A logically isolated network environment within AWS",
+          "explanation": "A VPC is a virtual network where you can launch AWS resources. It provides network isolation, custom IP ranges, and security controls through subnets and security groups."
+        },
+        {
+          "id": "aws4",
+          "question": "Which database service would you choose for unstructured, time-series data at massive scale?",
+          "options": ["RDS", "DynamoDB", "Aurora", "ElastiCache"],
+          "answer": "DynamoDB",
+          "explanation": "DynamoDB is a NoSQL database optimized for key-value and document data with automatic scaling. Perfect for high-traffic applications needing low latency."
+        },
+        {
+          "id": "aws5",
+          "question": "What does CloudFormation allow you to do?",
+          "options": [
+            "Deploy code without servers",
+            "Define and provision AWS infrastructure as code templates",
+            "Monitor application performance",
+            "Secure database connections"
+          ],
+          "answer": "Define and provision AWS infrastructure as code templates",
+          "explanation": "CloudFormation enables Infrastructure as Code - you define infrastructure in JSON/YAML templates, version control it, and deploy consistently."
+        },
+        {
+          "id": "aws6",
+          "question": "What is the purpose of an IAM role in AWS?",
+          "options": [
+            "To store database passwords",
+            "To grant permissions to AWS services and applications without storing credentials",
+            "To create user accounts only",
+            "To manage EC2 instance sizes"
+          ],
+          "answer": "To grant permissions to AWS services and applications without storing credentials",
+          "explanation": "IAM roles provide temporary credentials with specific permissions. Services assume roles to access other AWS resources securely without hardcoded credentials."
+        }
+      ],
+      "pdfResources": [
+        {"id": "aws1", "title": "AWS Well-Architected Framework", "url": "https://docs.aws.amazon.com/wellarchitected/latest/userguide/"},
+        {"id": "aws2", "title": "AWS Best Practices & Security", "url": "https://docs.aws.amazon.com/security/"},
+        {"id": "aws3", "title": "EC2 & Auto Scaling User Guide", "url": "https://docs.aws.amazon.com/ec2/"},
+        {"id": "aws4", "title": "AWS Lambda Developer Guide", "url": "https://docs.aws.amazon.com/lambda/"},
+        {"id": "aws5", "title": "CloudFormation Templates & Infrastructure as Code", "url": "https://docs.aws.amazon.com/cloudformation/"}
+      ],
+      "videoResources": [
+        {"id": "aws1", "title": "AWS Complete Tutorial for Beginners", "url": "https://www.youtube.com/watch?v=k1RI5locZE4"},
+        {"id": "aws2", "title": "AWS EC2 & Auto Scaling Tutorial", "url": "https://www.youtube.com/watch?v=4TA7LNaVmKo"},
+        {"id": "aws3", "title": "Serverless Architecture with Lambda", "url": "https://www.youtube.com/watch?v=MrXLDcArjXo"},
+        {"id": "aws4", "title": "VPC & Network Security in AWS", "url": "https://www.youtube.com/watch?v=g2JOt3tTh0w"},
+        {"id": "aws5", "title": "CloudFormation & Infrastructure as Code", "url": "https://www.youtube.com/watch?v=1236qZCJyFc"}
+      ]
+    }
+  },
+  {
+    "title": "Web Security Essentials & OWASP",
+    "instructor": "Alex Thompson",
+    "date": "2026-05-20",
+    "time": "1:00 PM",
+    "duration": "3 hours",
+    "category": "Security",
+    "description": "Learn essential web security concepts, OWASP Top 10 vulnerabilities, secure coding practices, and how to protect applications from common attacks.",
+    "price": 69.99,
+    "totalSeats": 50,
+    "availableSeats": 50,
+    "image": "/workshop-images/SECURITY_WORKSHOP.jpeg",
+    "skills": ["Security", "OWASP", "Authentication", "Encryption", "Secure Coding"],
+    "tutorials": [
+      "Module 1: Security Fundamentals - Confidentiality, integrity, availability, threat modeling",
+      "Module 2: OWASP Top 10 - Injection, broken auth, XSS, CSRF, sensitive data exposure",
+      "Module 3: Authentication & Authorization - Password management, multi-factor auth, session handling",
+      "Module 4: Cryptography Basics - Hashing, encryption, key management, digital signatures",
+      "Module 5: Web Application Security - Input validation, output encoding, security headers",
+      "Module 6: API Security - Rate limiting, OAuth 2.0, API key management, CORS policies",
+      "Module 7: Secure Development - Dependency scanning, SAST/DAST, security testing, code review",
+      "Module 8: Incident Response & Recovery - Breach response, forensics, compliance, logging"
+    ],
+    "learningContent": {
+      "mcqTests": [
+        {
+          "id": "sec1",
+          "question": "What is SQL Injection and how is it prevented?",
+          "options": [
+            "A database backup technique - prevented by compression",
+            "An attack using malicious SQL in user input - prevented by parameterized queries",
+            "A method to optimize queries - prevented by caching",
+            "A type of encryption - prevented by key management"
+          ],
+          "answer": "An attack using malicious SQL in user input - prevented by parameterized queries",
+          "explanation": "SQL Injection is when attackers inject SQL code through input fields. Parameterized queries separate code from data, preventing the attacker's input from being executed as code."
+        },
+        {
+          "id": "sec2",
+          "question": "What is Cross-Site Scripting (XSS)?",
+          "options": [
+            "Attacking a server with too many requests",
+            "Injecting malicious scripts into web pages viewed by users",
+            "A certificate verification process",
+            "A database query optimization technique"
+          ],
+          "answer": "Injecting malicious scripts into web pages viewed by users",
+          "explanation": "XSS allows attackers to inject JavaScript that steals cookies, redirects users, or performs actions. Prevented by output encoding and Content Security Policy headers."
+        },
+        {
+          "id": "sec3",
+          "question": "What is CSRF (Cross-Site Request Forgery)?",
+          "options": [
+            "Attacks on server resources",
+            "Tricking an authenticated user into performing unwanted actions on another site",
+            "A encryption type",
+            "A database optimization method"
+          ],
+          "answer": "Tricking an authenticated user into performing unwanted actions on another site",
+          "explanation": "CSRF exploits a user's existing authentication. Prevented using CSRF tokens that validate requests originate from your application."
+        },
+        {
+          "id": "sec4",
+          "question": "What is the purpose of password hashing?",
+          "options": [
+            "To encrypt passwords symmetrically",
+            "To store passwords securely so original cannot be recovered",
+            "To make passwords shorter",
+            "To compress password data"
+          ],
+          "answer": "To store passwords securely so original cannot be recovered",
+          "explanation": "Hashing (with salt) is one-way - even if hashes are leaked, originals can't be recovered. Use bcrypt/Argon2, not MD5/SHA1."
+        },
+        {
+          "id": "sec5",
+          "question": "What does OAuth 2.0 provide in API security?",
+          "options": [
+            "Password encryption",
+            "Delegated authorization allowing apps to access user data without storing passwords",
+            "SQL injection prevention",
+            "DDoS protection"
+          ],
+          "answer": "Delegated authorization allowing apps to access user data without storing passwords",
+          "explanation": "OAuth 2.0 enables secure delegated access - users authorize apps without sharing passwords. App gets tokens to access specific resources."
+        },
+        {
+          "id": "sec6",
+          "question": "What is the purpose of Content Security Policy (CSP) header?",
+          "options": [
+            "To encrypt content",
+            "To prevent unauthorized server access",
+            "To specify which resources (scripts, styles) can load on your page",
+            "To compress HTTP responses"
+          ],
+          "answer": "To specify which resources (scripts, styles) can load on your page",
+          "explanation": "CSP headers control which domains can load resources, preventing inline script execution and XSS attacks. Sets policies like 'script-src self'."
+        }
+      ],
+      "pdfResources": [
+        {"id": "sec1", "title": "OWASP Top 10 2021 - Web Application Security Risks", "url": "https://owasp.org/Top10/"},
+        {"id": "sec2", "title": "OWASP Secure Coding Practices", "url": "https://owasp.org/www-project-secure-coding-practices/"},
+        {"id": "sec3", "title": "Web Application Security Testing Guide", "url": "https://owasp.org/www-project-web-security-testing-guide/"},
+        {"id": "sec4", "title": "Authentication Cheat Sheet", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html"},
+        {"id": "sec5", "title": "Cryptographic Failures & Best Practices", "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cryptographic_Storage_Cheat_Sheet.html"}
+      ],
+      "videoResources": [
+        {"id": "sec1", "title": "Web Security Academy - Introduction", "url": "https://www.youtube.com/watch?v=WOwrqBLSWx0"},
+        {"id": "sec2", "title": "OWASP Top 10 Vulnerabilities Explained", "url": "https://www.youtube.com/watch?v=ZVeDZclmAtY"},
+        {"id": "sec3", "title": "SQL Injection & Prevention Techniques", "url": "https://www.youtube.com/watch?v=ciNHn38rkII"},
+        {"id": "sec4", "title": "Cross-Site Scripting (XSS) Attacks Explained", "url": "https://www.youtube.com/watch?v=rWHvzX5DTew"},
+        {"id": "sec5", "title": "API Security Best Practices", "url": "https://www.youtube.com/watch?v=dEPr7rwM7CQ"}
+      ]
     }
   }
 ]

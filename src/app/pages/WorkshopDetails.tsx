@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import {
   Calendar, Clock, DollarSign, Users, User, ArrowLeft, CheckCircle2,
-  BookOpen, Zap, Share2, MapPin
+  BookOpen, Zap, Share2, MapPin, PlayCircle, FileText, BarChart3, Lock
 } from 'lucide-react';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
 import { motion } from 'motion/react';
@@ -27,6 +27,7 @@ export const WorkshopDetails = () => {
   const { getWorkshopById, getBookingsByUser, getRegisteredUsersByWorkshop } = useWorkshops();
   const { isAuthenticated, user } = useAuth();
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState<'tutorials' | 'practice' | 'resources'>('tutorials');
   const workshop = getWorkshopById(id!);
   const userHasBooking = Boolean(
     user &&
@@ -79,13 +80,13 @@ export const WorkshopDetails = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero Banner */}
-      <div className={`relative overflow-hidden bg-gradient-to-br ${gradient}`} style={{ height: '340px' }}>
+      <div className={`relative overflow-hidden bg-linear-to-br ${gradient}`} style={{ height: '340px' }}>
         <ImageWithFallback
           src={`https://source.unsplash.com/1600x600/?${encodeURIComponent(workshop.image)}`}
           alt={workshop.title}
           className="w-full h-full object-cover opacity-20"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent" />
 
         {/* Back button */}
         <div className="absolute top-6 left-6">
@@ -143,7 +144,7 @@ export const WorkshopDetails = () => {
                   { icon: MapPin, label: 'Format', value: 'Online' },
                 ].map(({ icon: Icon, label, value }) => (
                   <div key={label} className="flex items-start gap-3">
-                    <div className="bg-indigo-50 rounded-xl p-2 flex-shrink-0">
+                    <div className="bg-indigo-50 rounded-xl p-2 shrink-0">
                       <Icon className="size-4 text-indigo-600" />
                     </div>
                     <div>
@@ -173,7 +174,7 @@ export const WorkshopDetails = () => {
               <div className="grid grid-cols-2 gap-3">
                 {workshop.skills.map(skill => (
                   <div key={skill} className="flex items-center gap-2.5 bg-gray-50 rounded-xl p-3">
-                    <div className="size-2 rounded-full bg-gradient-to-r from-indigo-400 to-purple-400 flex-shrink-0" />
+                    <div className="size-2 rounded-full bg-linear-to-r from-indigo-400 to-purple-400 shrink-0" />
                     <span className="text-sm text-gray-700 font-medium">{skill}</span>
                   </div>
                 ))}
@@ -182,97 +183,203 @@ export const WorkshopDetails = () => {
 
             {/* Tutorials + Learning Content */}
             <div className="bg-white rounded-2xl border border-indigo-100 shadow-sm p-6">
-              <h2 className="text-lg text-gray-900 mb-4 flex items-center gap-2">
+              <h2 className="text-lg text-gray-900 mb-6 flex items-center gap-2">
                 <BookOpen className="size-5 text-indigo-500" />
-                Learning Content
+                Learning Materials
               </h2>
+
               {userHasBooking ? (
                 <>
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-2">Structured Tutorials</h3>
-                    <ul className="space-y-2 text-sm text-gray-700">
-                      {workshop.tutorials?.map((item, idx) => (
-                        <li key={idx} className="flex gap-2 items-start">
-                          <span className="mt-0.5 text-indigo-600">•</span>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-2">MCQ Practice</h3>
-                    {workshop.learningContent?.mcqTests?.length ? (
-                      <div className="space-y-4">
-                        {workshop.learningContent.mcqTests.map(test => (
-                          <div key={test.id} className="border border-gray-100 rounded-xl p-4">
-                            <p className="text-sm font-medium text-gray-900">{test.question}</p>
-                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              {test.options.map(option => {
-                                const selected = selectedAnswers[test.id] === option;
-                                const correct = test.answer === option;
-                                return (
-                                  <button
-                                    key={option}
-                                    onClick={() => handleSelectAnswer(test.id, option)}
-                                    className={`text-left rounded-lg border px-3 py-2 text-sm font-medium ${
-                                      selected ? (correct ? 'border-green-500 bg-green-50 text-green-700' : 'border-red-500 bg-red-50 text-red-700') : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
-                                    }`}
-                                  >
-                                    {option}
-                                  </button>
-                                );
-                              })}
-                            </div>
-                            {selectedAnswers[test.id] && (
-                              <p className="mt-2 text-xs font-medium text-gray-600">
-                                {selectedAnswers[test.id] === test.answer ? 'Correct ✅' : `Incorrect ❌ (Correct: ${test.answer})`}
-                              </p>
-                            )}
-                          </div>
-                        ))}
+                  {/* Tab navigation */}
+                  <div className="flex gap-1 mb-6 border-b border-gray-200">
+                    <button
+                      onClick={() => setActiveTab('tutorials')}
+                      className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                        activeTab === 'tutorials'
+                          ? 'text-indigo-600 border-indigo-600'
+                          : 'text-gray-600 border-transparent hover:text-gray-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <BookOpen className="size-4" />
+                        Study Modules
                       </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">No MCQ currently available for this workshop.</p>
-                    )}
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('practice')}
+                      className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                        activeTab === 'practice'
+                          ? 'text-indigo-600 border-indigo-600'
+                          : 'text-gray-600 border-transparent hover:text-gray-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <BarChart3 className="size-4" />
+                        Practice & Quiz
+                      </div>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('resources')}
+                      className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+                        activeTab === 'resources'
+                          ? 'text-indigo-600 border-indigo-600'
+                          : 'text-gray-600 border-transparent hover:text-gray-900'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="size-4" />
+                        Resources
+                      </div>
+                    </button>
                   </div>
 
-                  <div className="mb-4">
-                    <h3 className="text-sm font-semibold text-gray-800 mb-2">PDF Resources</h3>
-                    {workshop.learningContent?.pdfResources?.length ? (
-                      <ul className="space-y-2 text-sm text-blue-600">
-                        {workshop.learningContent.pdfResources.map(resource => (
-                          <li key={resource.id}>
-                            <a href={resource.url} target="_blank" rel="noreferrer" className="underline">
-                              {resource.title}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-gray-500">No PDF resources available yet.</p>
-                    )}
-                  </div>
+                  {/* Study Modules Tab */}
+                  {activeTab === 'tutorials' && (
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-600 mb-4">
+                        Complete structured modules to master the key concepts. Follow the learning path from fundamentals to advanced topics.
+                      </p>
+                      {workshop.tutorials?.map((item, idx) => (
+                        <div key={idx} className="flex gap-3 p-3 bg-linear-to-r from-indigo-50 to-purple-50 rounded-lg border border-indigo-100 hover:border-indigo-300 transition-colors">
+                          <div className="shrink-0 w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-sm font-semibold">
+                            {idx + 1}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{item}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-800 mb-2">Video Resources</h3>
-                    {workshop.learningContent?.videoResources?.length ? (
-                      <ul className="space-y-2 text-sm text-gray-700">
-                        {workshop.learningContent.videoResources.map(resource => (
-                          <li key={resource.id}>
-                            <a href={resource.url} target="_blank" rel="noreferrer" className="text-indigo-600 underline">
-                              {resource.title}
-                            </a>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-gray-500">No video resources available yet.</p>
-                    )}
-                  </div>
+                  {/* Practice & Quiz Tab */}
+                  {activeTab === 'practice' && (
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600 mb-4">
+                        Test your knowledge with practice questions. Detailed explanations help reinforce learning.
+                      </p>
+                      {workshop.learningContent?.mcqTests?.length ? (
+                        <div className="space-y-4">
+                          {workshop.learningContent.mcqTests.map((test, testIdx) => (
+                            <div key={test.id} className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+                              <div className="flex items-start gap-3 mb-3">
+                                <div className="shrink-0 w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center text-sm font-semibold">
+                                  {testIdx + 1}
+                                </div>
+                                <p className="text-sm font-medium text-gray-900 mt-0.5">{test.question}</p>
+                              </div>
+                              <div className="ml-10 grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                                {test.options.map(option => {
+                                  const selected = selectedAnswers[test.id] === option;
+                                  const correct = test.answer === option;
+                                  return (
+                                    <button
+                                      key={option}
+                                      onClick={() => handleSelectAnswer(test.id, option)}
+                                      className={`text-left rounded-lg border px-3 py-2 text-sm font-medium transition-all ${
+                                        selected
+                                          ? correct
+                                            ? 'border-green-500 bg-green-50 text-green-700 shadow-sm'
+                                            : 'border-red-500 bg-red-50 text-red-700 shadow-sm'
+                                          : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-indigo-300'
+                                      }`}
+                                    >
+                                      {option}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              {selectedAnswers[test.id] && (
+                                <div className="ml-10 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                  <p className="text-xs font-semibold text-blue-700 mb-1">
+                                    {selectedAnswers[test.id] === test.answer ? '✅ Correct!' : '❌ Incorrect'}
+                                  </p>
+                                  <p className="text-xs text-blue-800">{test.explanation}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">No practice questions available yet.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Resources Tab */}
+                  {activeTab === 'resources' && (
+                    <div className="space-y-6">
+                      {/* Video Resources */}
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                          <PlayCircle className="size-4 text-red-500" />
+                          Video Tutorials
+                        </h3>
+                        {workshop.learningContent?.videoResources?.length ? (
+                          <ul className="space-y-2">
+                            {workshop.learningContent.videoResources.map(resource => (
+                              <li key={resource.id}>
+                                <a
+                                  href={resource.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-2 p-3 text-sm bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                                >
+                                  <PlayCircle className="size-4 text-red-500 shrink-0" />
+                                  <span className="text-gray-700 underline">{resource.title}</span>
+                                  <ArrowLeft className="size-3 text-gray-400 ml-auto" style={{ transform: 'rotate(180deg)' }} />
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-gray-500">No video resources available yet.</p>
+                        )}
+                      </div>
+
+                      {/* PDF Resources */}
+                      <div>
+                        <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                          <FileText className="size-4 text-blue-500" />
+                          Reading Materials
+                        </h3>
+                        {workshop.learningContent?.pdfResources?.length ? (
+                          <ul className="space-y-2">
+                            {workshop.learningContent.pdfResources.map(resource => (
+                              <li key={resource.id}>
+                                <a
+                                  href={resource.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="flex items-center gap-2 p-3 text-sm bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                                >
+                                  <FileText className="size-4 text-blue-500 shrink-0" />
+                                  <span className="text-gray-700 underline">{resource.title}</span>
+                                  <ArrowLeft className="size-3 text-gray-400 ml-auto" style={{ transform: 'rotate(180deg)' }} />
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-gray-500">No reading materials available yet.</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </>
               ) : (
-                <p className="text-sm text-gray-500">Register for this workshop to unlock tutorials, MCQs, PDFs, and videos.</p>
+                <div className="py-8 text-center">
+                  <Lock className="size-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600 mb-4">
+                    Unlock comprehensive learning materials by registering for this workshop
+                  </p>
+                  <Button
+                    onClick={handleRegister}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 rounded-lg"
+                  >
+                    Register & Unlock Content
+                  </Button>
+                </div>
               )}
             </div>
           </motion.div>
@@ -286,7 +393,7 @@ export const WorkshopDetails = () => {
           >
             {/* Price & Register Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className={`bg-gradient-to-r ${gradient} p-5`}>
+              <div className={`bg-linear-to-r ${gradient} p-5`}>
                 <p className="text-white/70 text-xs mb-1">Workshop Price</p>
                 <div className="flex items-baseline gap-1">
                   <DollarSign className="size-5 text-white mb-0.5" />
@@ -301,7 +408,7 @@ export const WorkshopDetails = () => {
                   className={`w-full rounded-xl border-0 text-base h-12 shadow-lg transition-all ${
                     workshop.availableSeats === 0
                       ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
-                      : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-indigo-200/60 hover:shadow-indigo-300/60 hover:-translate-y-0.5'
+                      : 'bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-indigo-200/60 hover:shadow-indigo-300/60 hover:-translate-y-0.5'
                   }`}
                 >
                   {workshop.availableSeats === 0 ? 'Workshop Full' : (isAuthenticated ? 'Register Now →' : 'Login to Register')}
@@ -364,7 +471,7 @@ export const WorkshopDetails = () => {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Your Instructor</h3>
               <div className="flex items-center gap-3">
-                <div className={`size-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0`}>
+                <div className={`size-12 rounded-xl bg-linear-to-br ${gradient} flex items-center justify-center shrink-0`}>
                   <span className="text-white text-lg font-semibold">
                     {workshop.instructor.charAt(0)}
                   </span>
