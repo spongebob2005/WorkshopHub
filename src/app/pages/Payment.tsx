@@ -134,7 +134,7 @@ export const Payment = () => {
                   className="absolute inset-0 rounded-2xl overflow-hidden"
                   style={{ backfaceVisibility: 'hidden' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600" />
+                  <div className="absolute inset-0 bg-linear-to-br from-indigo-600 via-purple-600 to-pink-600" />
                   <div
                     className="absolute inset-0 opacity-20"
                     style={{
@@ -182,7 +182,7 @@ export const Payment = () => {
                   className="absolute inset-0 rounded-2xl overflow-hidden"
                   style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-700 via-indigo-700 to-blue-700" />
+                  <div className="absolute inset-0 bg-linear-to-br from-purple-700 via-indigo-700 to-blue-700" />
                   <div className="absolute top-8 left-0 right-0 h-12 bg-black/40" />
                   <div className="absolute top-28 left-6 right-6">
                     <div className="bg-white/10 rounded-lg p-3 flex items-center justify-end">
@@ -219,7 +219,7 @@ export const Payment = () => {
                     exit={{ opacity: 0, y: -8 }}
                     className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm"
                   >
-                    <span className="size-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                    <span className="size-1.5 rounded-full bg-red-500 shrink-0" />
                     {error}
                   </motion.div>
                 )}
@@ -290,7 +290,7 @@ export const Payment = () => {
 
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-xl border-0 shadow-lg shadow-indigo-200/50 text-base mt-2 transition-all"
+                  className="w-full h-12 bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-xl border-0 shadow-lg shadow-indigo-200/50 text-base mt-2 transition-all"
                   disabled={processing}
                 >
                   {processing ? (
@@ -324,7 +324,7 @@ export const Payment = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5">
+              <div className="bg-linear-to-r from-indigo-600 to-purple-600 p-5">
                 <p className="text-white/70 text-xs uppercase tracking-wide mb-1">Order Summary</p>
                 <h2 className="text-xl text-white">{workshop.title}</h2>
                 <p className="text-indigo-200 text-sm mt-1">by {workshop.instructor}</p>

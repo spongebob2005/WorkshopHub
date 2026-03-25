@@ -26,10 +26,18 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
-          motion: ['motion'],
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-router')) {
+              return 'vendor'
+            }
+            if (id.includes('@radix-ui')) {
+              return 'ui'
+            }
+            if (id.includes('motion')) {
+              return 'motion'
+            }
+          }
         },
       },
     },

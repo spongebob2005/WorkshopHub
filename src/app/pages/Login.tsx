@@ -53,7 +53,7 @@ export const Login = () => {
         initial={{ x: -60, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
-        className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800 flex-col justify-between p-12"
+        className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-linear-to-br from-indigo-900 via-purple-900 to-indigo-800 flex-col justify-between p-12"
       >
         {/* Decorative background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -93,7 +93,7 @@ export const Login = () => {
           >
             <h2 className="text-4xl text-white mb-4 leading-tight">
               Learn from the best,{' '}
-              <span className="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
                 grow faster
               </span>
             </h2>
@@ -110,7 +110,7 @@ export const Login = () => {
                   transition={{ delay: 0.5 + i * 0.1 }}
                   className="flex items-start gap-4"
                 >
-                  <div className="bg-white/15 backdrop-blur-sm rounded-xl p-2.5 flex-shrink-0">
+                  <div className="bg-white/15 backdrop-blur-sm rounded-xl p-2.5 shrink-0">
                     <Icon className="size-4.5 text-white" />
                   </div>
                   <div>
@@ -130,7 +130,7 @@ export const Login = () => {
               "The workshops completely transformed how I approach my work. The instructors are world-class."
             </p>
             <div className="flex items-center gap-2 mt-3">
-              <div className="size-8 bg-gradient-to-br from-indigo-300 to-purple-300 rounded-full" />
+              <div className="size-8 bg-linear-to-br from-indigo-300 to-purple-300 rounded-full" />
               <div>
                 <p className="text-white text-xs font-medium">Alex Turner</p>
                 <p className="text-indigo-300 text-xs">Senior Developer</p>
@@ -150,10 +150,10 @@ export const Login = () => {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2 justify-center mb-8">
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-xl">
+            <div className="bg-linear-to-br from-indigo-500 to-purple-600 p-2 rounded-xl">
               <Sparkles className="size-5 text-white" />
             </div>
-            <span className="text-xl font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-xl font-semibold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               WorkshopHub
             </span>
           </div>
@@ -172,7 +172,7 @@ export const Login = () => {
                   exit={{ opacity: 0, y: -10 }}
                   className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm"
                 >
-                  <span className="size-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                  <span className="size-1.5 rounded-full bg-red-500 shrink-0" />
                   {error}
                 </motion.div>
               )}
@@ -221,7 +221,7 @@ export const Login = () => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-xl border-0 shadow-lg shadow-indigo-200/50 text-base transition-all hover:shadow-indigo-300/50"
+                className="w-full h-11 bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-xl border-0 shadow-lg shadow-indigo-200/50 text-base transition-all hover:shadow-indigo-300/50"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">

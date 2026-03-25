@@ -78,7 +78,7 @@ export const Register = () => {
         initial={{ x: -60, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
-        className="hidden lg:flex lg:w-5/12 relative overflow-hidden bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 flex-col justify-between p-12"
+        className="hidden lg:flex lg:w-5/12 relative overflow-hidden bg-linear-to-br from-purple-900 via-indigo-900 to-blue-900 flex-col justify-between p-12"
       >
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <motion.div
@@ -115,7 +115,7 @@ export const Register = () => {
           >
             <h2 className="text-4xl text-white mb-4 leading-tight">
               Start your{' '}
-              <span className="bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
+              <span className="bg-linear-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
                 learning journey
               </span>{' '}
               today
@@ -163,10 +163,10 @@ export const Register = () => {
       >
         <div className="w-full max-w-md py-6">
           <div className="lg:hidden flex items-center gap-2 justify-center mb-8">
-            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-xl">
+            <div className="bg-linear-to-br from-indigo-500 to-purple-600 p-2 rounded-xl">
               <Sparkles className="size-5 text-white" />
             </div>
-            <span className="text-xl font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-xl font-semibold bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
               WorkshopHub
             </span>
           </div>
@@ -185,7 +185,7 @@ export const Register = () => {
                   exit={{ opacity: 0, y: -10 }}
                   className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm"
                 >
-                  <span className="size-1.5 rounded-full bg-red-500 flex-shrink-0" />
+                  <span className="size-1.5 rounded-full bg-red-500 shrink-0" />
                   {error}
                 </motion.div>
               )}
@@ -296,7 +296,7 @@ export const Register = () => {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-11 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-xl border-0 shadow-lg shadow-indigo-200/50 text-base transition-all mt-2"
+                className="w-full h-11 bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-xl border-0 shadow-lg shadow-indigo-200/50 text-base transition-all mt-2"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">
