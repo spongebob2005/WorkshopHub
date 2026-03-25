@@ -55,11 +55,11 @@ export const Navbar = () => {
             <Link to="/" className="flex items-center gap-2.5 group">
               <div className="relative">
                 <div className="absolute inset-0 bg-indigo-500 rounded-xl blur-sm opacity-40 group-hover:opacity-70 transition-opacity" />
-                <div className="relative bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-xl">
+                <div className="relative bg-linear-to-br from-indigo-500 to-purple-600 p-2 rounded-xl">
                   <Sparkles className="size-5 text-white" />
                 </div>
               </div>
-              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent font-semibold text-xl tracking-tight">
+              <span className="bg-linear-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent font-semibold text-xl tracking-tight">
                 WorkshopHub
               </span>
             </Link>
@@ -80,7 +80,7 @@ export const Navbar = () => {
                     {isActive(to) && (
                       <motion.div
                         layoutId="navUnderline"
-                        className="absolute bottom-1 left-4 right-4 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
+                        className="absolute bottom-1 left-4 right-4 h-0.5 bg-linear-to-r from-indigo-500 to-purple-500 rounded-full"
                         transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
                       />
                     )}
@@ -94,7 +94,7 @@ export const Navbar = () => {
               {isAuthenticated ? (
                 <>
                   <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl">
-                    <div className="size-7 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center">
+                    <div className="size-7 bg-linear-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center">
                       <User className="size-3.5 text-white" />
                     </div>
                     <span className="text-sm text-gray-700 font-medium">{user?.name}</span>
@@ -122,7 +122,7 @@ export const Navbar = () => {
                   <Button
                     size="sm"
                     onClick={() => navigate('/register')}
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white border-0 shadow-md shadow-indigo-200"
+                    className="bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white border-0 shadow-md shadow-indigo-200"
                   >
                     Get Started
                   </Button>
@@ -194,7 +194,7 @@ export const Navbar = () => {
                       </Button>
                       <Button
                         size="sm"
-                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600"
+                        className="w-full bg-linear-to-r from-indigo-600 to-purple-600"
                         onClick={() => navigate('/register')}
                       >
                         Get Started

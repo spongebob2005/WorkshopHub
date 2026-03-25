@@ -145,7 +145,7 @@ export const PaymentSuccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
       <div className="w-full max-w-xl">
         {/* Success card */}
         <motion.div
@@ -155,7 +155,7 @@ export const PaymentSuccess = () => {
           className="bg-white rounded-3xl shadow-2xl shadow-indigo-200/40 border border-white overflow-hidden"
         >
           {/* Top banner */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-center relative overflow-hidden">
+          <div className="bg-linear-to-r from-indigo-600 to-purple-600 p-8 text-center relative overflow-hidden">
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               {[...Array(6)].map((_, i) => (
                 <motion.div
@@ -249,7 +249,7 @@ export const PaymentSuccess = () => {
               </button>
               <button
                 onClick={() => navigate('/bookings')}
-                className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all text-sm font-medium shadow-md shadow-indigo-200/50"
+                className="flex-1 flex items-center justify-center gap-2 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all text-sm font-medium shadow-md shadow-indigo-200/50"
               >
                 <Calendar className="size-4" />
                 My Bookings
