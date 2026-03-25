@@ -76,8 +76,10 @@ const WORKSHOP_IMAGE_MAP: Record<string, string> = {
   'Mobile App Development with React Native': '/workshop-images/REACT_NATIVE.jpeg',
   'Cybersecurity Essentials': '/workshop-images/CYBER_SECURITY_WORKSHOP.jpeg',
   'Blockchain & Smart Contracts': '/workshop-images/BLOCK_CHAIN_WORKSHOP.jpeg',
-  'AI / MLOps Fundamentals': '/workshop-images/AI_WORKSHOP.jpeg',
+  'AI / MLOps Fundamentals': '/workshop-images/AI_ML_OPS_WORKSHOP.jpeg',
+  'UI Testing with Playwright': '/workshop-images/UI_TESTING_WORKSHOP.jpeg',
   'Full-stack TypeScript Development': '/workshop-images/TYPESCRIPT_WORKSHOP.jpeg',
+  'Data Engineering with Docker & Kafka': '/workshop-images/DATA_ENGINEERING_WORKSHOP.jpeg',
 };
 
 const normalizeAndSaveWorkshops = (workshops: Workshop[]) => {
@@ -161,6 +163,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
       'Lesson 2: Wireframing & Mockups in Figma',
       'Lesson 3: Accessibility & Usability Testing',
     ],
+    learningContent: {
+      mcqTests: [],
+      pdfResources: [],
+      videoResources: [],
+    },
   },
   {
     id: '3',
@@ -181,6 +188,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
       'Part 2: Visualization with Matplotlib/Seaborn',
       'Part 3: Intro to Scikit-learn models',
     ],
+    learningContent: {
+      mcqTests: [],
+      pdfResources: [],
+      videoResources: [],
+    },
   },
   {
     id: '4',
@@ -201,6 +213,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
       'Unit 2: Running high-impact campaigns',
       'Unit 3: Tracking growth with analytics',
     ],
+    learningContent: {
+      mcqTests: [],
+      pdfResources: [],
+      videoResources: [],
+    },
   },
   {
     id: '5',
@@ -221,6 +238,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
       'Session 2: Serverless and microservices design',
       'Session 3: High availability and cost optimization',
     ],
+    learningContent: {
+      mcqTests: [],
+      pdfResources: [],
+      videoResources: [],
+    },
   },
   {
     id: '6',
@@ -241,6 +263,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
       'Step 2: Native features and state management',
       'Step 3: App deployment on iOS/Android stores',
     ],
+    learningContent: {
+      mcqTests: [],
+      pdfResources: [],
+      videoResources: [],
+    },
   },
   {
     id: '7',
@@ -261,6 +288,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
       'Chapter 2: Protecting user data and auth flows',
       'Chapter 3: Threat models and penetration testing',
     ],
+    learningContent: {
+      mcqTests: [],
+      pdfResources: [],
+      videoResources: [],
+    },
   },
   {
     id: '8',
@@ -281,6 +313,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
       'Step 2: Smart contract design and auditing',
       'Step 3: Deploying dApps to live networks',
     ],
+    learningContent: {
+      mcqTests: [],
+      pdfResources: [],
+      videoResources: [],
+    },
   },
   {
     id: '9',
@@ -301,6 +338,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
       'Lesson 2: Training/validation pipelines with CI',
       'Lesson 3: Deployment, monitoring, and retraining',
     ],
+    learningContent: {
+      mcqTests: [],
+      pdfResources: [],
+      videoResources: [],
+    },
   },
   {
     id: '10',
@@ -321,6 +363,11 @@ const INITIAL_WORKSHOPS: Workshop[] = [
       'Part 2: React + TypeScript UI development',
       'Part 3: Database integration and deployment',
     ],
+    learningContent: {
+      mcqTests: [],
+      pdfResources: [],
+      videoResources: [],
+    },
   },
   {
     id: '11',
