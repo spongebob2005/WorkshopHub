@@ -54,11 +54,11 @@ export const WorkshopCard = ({ workshop }: WorkshopCardProps) => {
       className="group bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-gray-200/60 transition-shadow duration-300 flex flex-col h-full"
     >
       {/* Image */}
-      <div className={`relative h-52 overflow-hidden bg-gradient-to-br ${gradient} rounded-t-2xl`}>
+      <div className={`relative h-52 overflow-hidden bg-linear-to-br ${gradient} rounded-t-2xl`}>
         {!imgLoaded && !imgError && (
           <div className="absolute inset-0 animate-pulse">
-            <div className="w-full h-full bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 rounded-t-2xl" />
-            <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-t-2xl" />
+            <div className="w-full h-full bg-linear-to-r from-gray-200 via-gray-100 to-gray-200 rounded-t-2xl" />
+            <div className="absolute inset-0 bg-linear-to-br from-white/20 to-transparent rounded-t-2xl" />
             <div className="absolute bottom-4 left-4 right-4">
               <div className="bg-white/20 backdrop-blur-sm rounded-xl px-3 py-1.5">
                 <div className="flex items-center gap-2">
@@ -77,7 +77,7 @@ export const WorkshopCard = ({ workshop }: WorkshopCardProps) => {
           onError={() => setImgError(true)}
         />
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent" />
 
         {/* Category badge */}
         <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-lg text-xs font-medium ${categoryLight} backdrop-blur-sm`}>
@@ -168,7 +168,7 @@ export const WorkshopCard = ({ workshop }: WorkshopCardProps) => {
             className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
               workshop.availableSeats === 0
                 ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-md shadow-indigo-200/50 hover:shadow-indigo-300/50 group-hover:gap-3'
+                : 'bg-linear-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 shadow-md shadow-indigo-200/50 hover:shadow-indigo-300/50 group-hover:gap-3'
             }`}
           >
             {workshop.availableSeats === 0 ? 'Sold Out' : 'View Details'}
