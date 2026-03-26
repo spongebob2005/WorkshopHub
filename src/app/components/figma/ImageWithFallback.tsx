@@ -30,7 +30,7 @@ export function ImageWithFallback(props: React.ImgHTMLAttributes<HTMLImageElemen
 
   return didError ? (
     <div
-      className={`inline-block bg-gradient-to-br from-gray-100 to-gray-200 text-center align-middle rounded-t-2xl ${className ?? ''}`}
+      className={`inline-block bg-linear-to-br from-gray-100 to-gray-200 text-center align-middle rounded-t-2xl ${className ?? ''}`}
       style={style}
     >
       <div className="flex items-center justify-center w-full h-full">
