@@ -55,7 +55,7 @@ export const Payment = () => {
       return;
     }
     setProcessing(true);
-    setTimeout(async () => {
+    setTimeout(() => {
       const paymentId = `PAY-${Date.now()}`;
       const booking = {
         id: `BKG-${Date.now()}`,
@@ -66,13 +66,9 @@ export const Payment = () => {
         status: 'confirmed' as const,
         amount: workshop.price,
       };
-      const added = await addBooking(booking);
-      if (added) {
-        navigate(`/payment-success/${booking.id}`);
-      } else {
-        setError('Payment succeeded but there was an error registering booking. Please contact support.');
-      }
-      setProcessing(false);
+      addBooking(booking);  
+      updateSeatAvailability(workshop.id, 1);
+      navigate(`/payment-success/${booking.id}`, { state: { booking } });
     }, 2500);
   };
 
@@ -84,6 +80,10 @@ export const Payment = () => {
     }
     return parts.length ? parts.join(' ') : value;
   };
+
+  const maskedNumber = cardNumber
+    ? cardNumber.padEnd(19, ' ').split(' ').join(' ')
+    : '•••• •••• •••• ••••';
 
   const getCardBrand = () => {
     const n = cardNumber.replace(/\s/g, '');

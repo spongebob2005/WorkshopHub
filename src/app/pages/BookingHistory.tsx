@@ -154,7 +154,7 @@ export const BookingHistory = () => {
               </p>
               <button
                 onClick={() => navigate('/')}
-                className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-200/50 font-medium"
+                className="px-8 py-3 bg-linear-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-200/50 font-medium"
               >
                 Browse Workshops
               </button>
@@ -258,7 +258,7 @@ export const BookingHistory = () => {
                     className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
                   >
                     {/* Card header with status indicator */}
-                    <div className={`h-1 w-full ${isConfirmed ? 'bg-gradient-to-r from-indigo-500 to-purple-500' : 'bg-gray-200'}`} />
+                    <div className={`h-1 w-full ${isConfirmed ? 'bg-linear-to-r from-indigo-500 to-purple-500' : 'bg-gray-200'}`} />
 
                     <div className="p-5 sm:p-6">
                       <div className="flex items-start justify-between gap-4 mb-4">
@@ -280,7 +280,7 @@ export const BookingHistory = () => {
                           <h3 className="text-base font-semibold text-gray-900">{workshop.title}</h3>
                           <p className="text-sm text-gray-500 mt-0.5">by {workshop.instructor}</p>
                         </div>
-                        <div className="text-right flex-shrink-0">
+                        <div className="text-right shrink-0">
                           <p className="text-xs text-gray-400">Amount</p>
                           <p className={`text-xl font-bold ${isConfirmed ? 'text-indigo-600' : 'text-gray-400'}`}>
                             ${booking.amount}
