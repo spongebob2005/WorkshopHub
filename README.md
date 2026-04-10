@@ -252,6 +252,26 @@ This is a demonstration project. Feel free to:
 - Adapt for commercial projects
 - Share and distribute
 
+## 🧩 MongoDB Connection Setup
+
+To enable MongoDB storage for real data persistence, add the following environment variables to your Supabase function runtime or local development environment:
+
+```env
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/<database>?retryWrites=true&w=majority
+MONGODB_DB=workshophub
+```
+
+Then restart the server or redeploy the Supabase function. The backend automatically uses MongoDB when `MONGODB_URI` is present.
+
+### Collections created automatically
+- `users`
+- `workshops`
+- `bookings`
+- `payments`
+- `events`
+
+> MongoDB collections are created automatically when the first document is inserted.
+
 ## 📄 License
 
 MIT License - Free to use for any purpose.

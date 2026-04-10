@@ -1,3 +1,4 @@
+import "https://deno.land/std@0.216.0/dotenv/load.ts";
 import { Hono } from "npm:hono";
 import { cors } from "npm:hono/cors";
 import { logger } from "npm:hono/logger";
@@ -253,6 +254,29 @@ app.delete("/make-server-008fe078/bookings/:id", async (c) => {
     return c.json({ success: true });
   } catch (error) {
     console.error("DELETE /bookings/:id error:", error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+// Payments
+app.get("/make-server-008fe078/payments", async (c) => {
+  try {
+    const payments = await store.getByPrefix("payment:");
+    return c.json(payments);
+  } catch (error) {
+    console.error("GET /payments error:", error);
+    return c.json({ error: String(error) }, 500);
+  }
+});
+
+app.post("/make-server-008fe078/payments", async (c) => {
+  try {
+    const payment = await c.req.json();
+    await store.set(`payment:${payment.id}`, payment);
+    await logEvent({ type: 'payment', paymentId: payment.id, userId: payment.userId, amount: payment.amount });
+    return c.json({ success: true, payment });
+  } catch (error) {
+    console.error("POST /payments error:", error);
     return c.json({ error: String(error) }, 500);
   }
 });

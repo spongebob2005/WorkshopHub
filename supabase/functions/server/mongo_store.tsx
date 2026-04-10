@@ -28,6 +28,7 @@ const getDatabase = async () => {
     db.collection("users").createIndex({ email: 1 }, { unique: true }),
     db.collection("workshops").createIndex({ id: 1 }, { unique: true }),
     db.collection("bookings").createIndex({ id: 1 }, { unique: true }),
+    db.collection("payments").createIndex({ id: 1 }, { unique: true }),
     db.collection("events").createIndex({ timestamp: -1 }),
   ]);
 
@@ -43,6 +44,9 @@ const splitKey = (key: string) => {
   }
   if (key.startsWith("booking:")) {
     return { collection: "bookings", id: key.slice(8) };
+  }
+  if (key.startsWith("payment:")) {
+    return { collection: "payments", id: key.slice(8) };
   }
   return { collection: "kv_store", id: key };
 };
@@ -119,6 +123,11 @@ export const getByPrefix = async (prefix: string): Promise<any[]> => {
 
   if (prefix === "booking:") {
     const col = await getCollection("bookings");
+    return await col.find({}).toArray();
+  }
+
+  if (prefix === "payment:") {
+    const col = await getCollection("payments");
     return await col.find({}).toArray();
   }
 
