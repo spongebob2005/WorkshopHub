@@ -17,9 +17,13 @@ const checkBackend = async (): Promise<boolean> => {
     try {
       const res = await fetch(`${BASE_URL}/health`, { headers });
       backendAvailable = res.ok;
+      if (!backendAvailable) {
+        backendCheckPromise = null;
+      }
       return backendAvailable;
     } catch {
       backendAvailable = false;
+      backendCheckPromise = null;
       return false;
     }
   })();
