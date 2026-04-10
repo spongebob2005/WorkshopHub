@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useNavigate } from 'react-router-dom';
 import { Badge } from './ui/badge';
 import { Calendar, Clock, Users, DollarSign, ArrowRight, BookOpen } from 'lucide-react';
 import { Workshop } from '../contexts/WorkshopContext';

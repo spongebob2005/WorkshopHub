@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useWorkshops } from '../contexts/WorkshopContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Input } from '../components/ui/input';

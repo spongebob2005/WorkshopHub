@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 export const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {

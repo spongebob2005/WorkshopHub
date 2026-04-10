@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router';
+import { createBrowserRouter } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { AdminNavbar } from './components/AdminNavbar';
 import { ProtectedRoute } from './components/ProtectedRoute';
