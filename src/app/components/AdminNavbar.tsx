@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'motion/react';
-import { LayoutDashboard, GraduationCap, BookOpen, LogOut, Sparkles, Home } from 'lucide-react';
+import { LayoutDashboard, GraduationCap, BookOpen, LogOut, Sparkles, Home, Users } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 
