@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000/api";
 
 const headers = {
@@ -47,7 +49,7 @@ const saveToStorage = (key: string, data: any[]): void => {
 };
 
 export const api = {
-  get: async (endpoint: string) => {
+  get: async (endpoint: string): Promise<any> => {
     const isBackendUp = await checkBackend();
     
     if (!isBackendUp) {
@@ -98,7 +100,7 @@ export const api = {
     }
   },
   
-  post: async (endpoint: string, body: any) => {
+  post: async (endpoint: string, body: any): Promise<any> => {
     const isBackendUp = await checkBackend();
     
     if (!isBackendUp) {
@@ -174,7 +176,7 @@ export const api = {
     }
   },
   
-  put: async (endpoint: string, body: any) => {
+  put: async (endpoint: string, body: any): Promise<any> => {
     const isBackendUp = await checkBackend();
     
     if (!isBackendUp) {
@@ -224,7 +226,7 @@ export const api = {
     }
   },
   
-  delete: async (endpoint: string) => {
+  delete: async (endpoint: string): Promise<any> => {
     const isBackendUp = await checkBackend();
     
     if (!isBackendUp) {
