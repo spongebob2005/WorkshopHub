@@ -85,20 +85,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string, role: 'admin' | 'student' = 'student'): Promise<boolean> => {
     try {
-      const users: any[] = await api.get('/users');
+      const response: any = await api.post('/login', { email, password, role });
       
-      const foundUser = users.find((u: any) => 
-        u.email === email && 
-        u.password === password &&
-        (u.role || 'student') === role
-      );
-
-      if (foundUser) {
+      if (response?.success && response.user) {
         const userWithoutPassword = { 
-          id: foundUser.id, 
-          name: foundUser.name, 
-          email: foundUser.email,
-          role: foundUser.role || 'student'
+          id: response.user.id, 
+          name: response.user.name, 
+          email: response.user.email,
+          role: response.user.role || 'student'
         };
         setUser(userWithoutPassword);
         localStorage.setItem('currentUser', JSON.stringify(userWithoutPassword));

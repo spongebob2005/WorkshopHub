@@ -107,7 +107,16 @@ export const api = {
     if (!isBackendUp) {
       console.log(`Using localStorage fallback for POST ${endpoint}`);
       
-      if (endpoint === '/users') {
+      if (endpoint === '/login') {
+        const users = getFromStorage('users');
+        const foundUser = users.find((u: any) => u.email === body.email && u.password === body.password && (u.role || 'student') === body.role);
+        if (!foundUser) {
+          return { success: false, error: 'Invalid credentials' };
+        }
+        const userWithoutPassword = { ...foundUser };
+        delete userWithoutPassword.password;
+        return { success: true, user: userWithoutPassword };
+      } else if (endpoint === '/users') {
         const users = getFromStorage('users');
         users.push(body);
         saveToStorage('users', users);
@@ -154,7 +163,11 @@ export const api = {
       });
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(`POST ${endpoint} failed with status ${res.status}: ${text}`);
+        if (res.status >= 500) {
+          backendAvailable = false;
+          return api.post(endpoint, body);
+        }
+        return { success: false, error: text };
       }
       return await res.json();
     } catch (e) {
