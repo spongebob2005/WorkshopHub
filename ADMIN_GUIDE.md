@@ -81,7 +81,7 @@
 ## Technical Notes
 
 - Admin user is automatically created on first app load
-- All data is persisted in Supabase database
+- All data is persisted in MongoDB through the backend API
 - Real-time updates across all admin pages
 - Glassmorphism UI with smooth animations
 - Full CRUD operations on workshops, users, and bookings

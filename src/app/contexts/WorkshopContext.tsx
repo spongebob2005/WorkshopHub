@@ -345,7 +345,7 @@ export const WorkshopProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       try {
         await api.post('/bookings', updatedBooking);
-        await updateSeatAvailability(booking.workshopId, -1);
+        await updateSeatAvailability(booking.workshopId, 1);
       } catch (e) {
         console.error('Failed to cancel booking on server', e);
       }

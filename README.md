@@ -146,6 +146,8 @@ The project is pre-configured for Vercel with:
 
 ```
 workshop-registration-system/
+├── server/                           # MongoDB backend server
+│   └── index.js                      # Express API server
 ├── src/
 │   ├── app/
 │   │   ├── components/
@@ -254,14 +256,25 @@ This is a demonstration project. Feel free to:
 
 ## 🧩 MongoDB Connection Setup
 
-To enable MongoDB storage for real data persistence, add the following environment variables to your Supabase function runtime or local development environment:
+To enable MongoDB storage for real data persistence, add the following environment variables to your local `.env` file:
 
 ```env
-MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/<database>?retryWrites=true&w=majority
+PORT=4000
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-url>/workshophub?retryWrites=true&w=majority
 MONGODB_DB=workshophub
 ```
 
-Then restart the server or redeploy the Supabase function. The backend automatically uses MongoDB when `MONGODB_URI` is present.
+Then start the backend server with:
+
+```bash
+npm run dev:server
+```
+
+The frontend runs separately with:
+
+```bash
+npm run dev
+```
 
 ### Collections created automatically
 - `users`
