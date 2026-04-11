@@ -68,6 +68,7 @@ export const ManageWorkshops = () => {
       seats: 30,
       enrolled: 0,
       description: '',
+      image: '',
     });
     setShowModal(true);
   };
@@ -296,6 +297,28 @@ export const ManageWorkshops = () => {
                       className="mt-1"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="image">Image URL / Search term</Label>
+                  <Input
+                    id="image"
+                    value={formData.image || ''}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    placeholder="Enter a direct image URL or a search keyword"
+                    className="mt-1"
+                  />
+                  {formData.image && (
+                    <div className="mt-4 rounded-3xl overflow-hidden border border-gray-200 shadow-sm">
+                      <img
+                        src={formData.image.startsWith('http')
+                          ? formData.image
+                          : `https://source.unsplash.com/800x450/?${encodeURIComponent(formData.image)}`}
+                        alt="Workshop preview"
+                        className="w-full h-48 object-cover"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
