@@ -31,15 +31,15 @@ export const Payment = () => {
 
   if (workshopsLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full size-8 border-2 border-gray-200 border-t-gray-900"></div>
       </div>
     );
   }
 
   if (!workshop) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl mb-4">Workshop not found</h2>
           <Button onClick={() => navigate('/')}>Back to Workshops</Button>
@@ -118,7 +118,7 @@ export const Payment = () => {
   const cardBrand = getCardBrand();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-[100dvh] bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <motion.div
@@ -156,7 +156,7 @@ export const Payment = () => {
                   className="absolute inset-0 rounded-2xl overflow-hidden"
                   style={{ backfaceVisibility: 'hidden' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600" />
+                  <div className="absolute inset-0 bg-gray-900" />
                   <div
                     className="absolute inset-0 opacity-20"
                     style={{
@@ -170,7 +170,7 @@ export const Payment = () => {
                         <Wifi className="size-5 text-white rotate-90" />
                       </div>
                       {cardBrand ? (
-                        <span className="text-white font-bold text-lg tracking-widest">{cardBrand}</span>
+                        <span className="text-white font-semibold text-lg tracking-widest">{cardBrand}</span>
                       ) : (
                         <CreditCard className="size-8 text-white/60" />
                       )}
@@ -204,7 +204,7 @@ export const Payment = () => {
                   className="absolute inset-0 rounded-2xl overflow-hidden"
                   style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-700 via-indigo-700 to-blue-700" />
+                  <div className="absolute inset-0 bg-gray-900" />
                   <div className="absolute top-8 left-0 right-0 h-12 bg-black/40" />
                   <div className="absolute top-28 left-6 right-6">
                     <div className="bg-white/10 rounded-lg p-3 flex items-center justify-end">
@@ -221,7 +221,7 @@ export const Payment = () => {
             </div>
 
             {/* Form */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] p-6">
               <div className="flex items-center gap-2 mb-5">
                 <div className="bg-indigo-50 rounded-xl p-2">
                   <CreditCard className="size-4.5 text-indigo-600" />
@@ -312,7 +312,7 @@ export const Payment = () => {
 
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-xl border-0 shadow-lg shadow-indigo-200/50 text-base mt-2 transition-all"
+                  className="w-full h-12 bg-gray-900 hover:bg-indigo-700 rounded-xl border-0 shadow-lg text-base mt-2 transition-all"
                   disabled={processing}
                 >
                   {processing ? (
@@ -333,7 +333,7 @@ export const Payment = () => {
                 </Button>
 
                 <p className="text-center text-xs text-gray-400">
-                  🔒 Simulated payment — no real transaction occurs
+                  Simulated payment. No real transaction occurs.
                 </p>
               </form>
             </div>
@@ -345,8 +345,8 @@ export const Payment = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5">
+            <div className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] overflow-hidden sticky top-24">
+              <div className="bg-gray-900 p-5">
                 <p className="text-white/70 text-xs uppercase tracking-wide mb-1">Order Summary</p>
                 <h2 className="text-xl text-white">{workshop.title}</h2>
                 <p className="text-indigo-200 text-sm mt-1">by {workshop.instructor}</p>
@@ -384,7 +384,7 @@ export const Payment = () => {
 
                 <div className="bg-indigo-50 rounded-xl p-4 flex justify-between items-center">
                   <span className="text-indigo-900 font-semibold">Total</span>
-                  <span className="text-2xl text-indigo-700 font-bold">${workshop.price}</span>
+                  <span className="text-2xl text-indigo-700 font-semibold">${workshop.price}</span>
                 </div>
 
                 {/* Trust badges */}

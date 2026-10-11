@@ -1,4 +1,5 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Link } from 'react-router-dom';
+import { LogoMark } from './components/Logo';
 import { Navbar } from './components/Navbar';
 import { AdminNavbar } from './components/AdminNavbar';
 import { ProtectedRoute } from './components/ProtectedRoute';
@@ -16,23 +17,71 @@ import { AdminManagement } from './pages/admin/AdminManagement';
 import { ManageRegistrations } from './pages/admin/ManageRegistrations';
 import { ManageUsers } from './pages/admin/ManageUsers';
 
+const SkipLink = () => (
+  <a
+    href="#main"
+    className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-gray-900 focus:px-4 focus:py-2 focus:text-sm focus:text-white"
+  >
+    Skip to content
+  </a>
+);
+
+const Footer = () => (
+  <footer className="border-t border-gray-200">
+    <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div className="flex items-center gap-2.5">
+        <LogoMark className="size-6 text-gray-900" />
+        <span>WorkshopHub · LP-II mini project</span>
+      </div>
+      <nav className="flex gap-5" aria-label="Footer">
+        <Link to="/" className="transition-colors hover:text-gray-900">Workshops</Link>
+        <Link to="/bookings" className="transition-colors hover:text-gray-900">My bookings</Link>
+        <span className="font-mono text-xs text-gray-400 tabular">© {new Date().getFullYear()}</span>
+      </nav>
+    </div>
+  </footer>
+);
+
 const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="flex min-h-[100dvh] flex-col bg-gray-50">
+      <SkipLink />
       <Navbar />
-      {children}
+      <div id="main" className="flex-1">{children}</div>
+      <Footer />
     </div>
   );
 };
 
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-[100dvh] bg-gray-50">
+      <SkipLink />
       <AdminNavbar />
-      {children}
+      <div id="main">{children}</div>
     </div>
   );
 };
+
+const NotFound = () => (
+  <main className="mx-auto flex min-h-[70dvh] max-w-7xl flex-col justify-center px-4 py-24 sm:px-6 lg:px-8">
+    <p className="eyebrow text-indigo-700">Error 404</p>
+    <h1 className="mt-4 max-w-[18ch] text-5xl tracking-[-0.035em] text-gray-900 sm:text-6xl">
+      This page <span className="text-indigo-700">isn't on the schedule.</span>
+    </h1>
+    <p className="mt-5 max-w-[50ch] text-gray-500">
+      The link may be old, or the workshop may have been removed. The catalog has everything that's currently running.
+    </p>
+    <div className="mt-8 flex flex-wrap gap-3">
+      <Link to="/" className="press rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700">
+        Browse workshops
+      </Link>
+      <Link to="/bookings" className="rounded-lg px-4 py-2.5 text-sm text-gray-600 transition-colors hover:text-gray-900">
+        View my bookings
+      </Link>
+    </div>
+  </main>
+);
 
 export const router = createBrowserRouter([
   {
@@ -141,12 +190,7 @@ export const router = createBrowserRouter([
     path: '*',
     element: (
       <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-4xl mb-4">404 - Page Not Found</h1>
-            <p className="text-gray-600">The page you're looking for doesn't exist.</p>
-          </div>
-        </div>
+        <NotFound />
       </Layout>
     ),
   },

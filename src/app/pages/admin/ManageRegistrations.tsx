@@ -91,7 +91,7 @@ export const ManageRegistrations = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 py-8 px-4">
+    <div className="min-h-[100dvh] bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -101,11 +101,11 @@ export const ManageRegistrations = () => {
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-green-600 to-emerald-600 p-3 rounded-2xl">
+              <div className="bg-gray-900 p-3 rounded-xl">
                 <BookOpen className="size-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Manage Registrations</h1>
+                <h1 className="text-3xl tracking-[-0.03em] text-gray-900">Manage Registrations</h1>
                 <p className="text-gray-600">{bookings.length} total registrations</p>
               </div>
             </div>
@@ -134,7 +134,7 @@ export const ManageRegistrations = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm font-medium mb-1">Total Registrations</p>
-                <p className="text-3xl font-bold text-gray-900">{filteredBookings.length}</p>
+                <p className="text-3xl font-semibold text-gray-900">{filteredBookings.length}</p>
               </div>
               <div className="bg-green-50 p-3 rounded-xl">
                 <BookOpen className="size-6 text-green-600" />
@@ -151,7 +151,7 @@ export const ManageRegistrations = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm font-medium mb-1">Total Revenue</p>
-                <p className="text-3xl font-bold text-gray-900">${totalRevenue.toLocaleString()}</p>
+                <p className="text-3xl font-semibold text-gray-900">${totalRevenue.toLocaleString()}</p>
               </div>
               <div className="bg-amber-50 p-3 rounded-xl">
                 <DollarSign className="size-6 text-amber-600" />
@@ -168,7 +168,7 @@ export const ManageRegistrations = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm font-medium mb-1">Avg per Booking</p>
-                <p className="text-3xl font-bold text-gray-900">
+                <p className="text-3xl font-semibold text-gray-900">
                   ${filteredBookings.length > 0 ? Math.round(totalRevenue / filteredBookings.length) : 0}
                 </p>
               </div>
@@ -184,7 +184,7 @@ export const ManageRegistrations = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 overflow-hidden"
+          className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] overflow-hidden"
         >
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -303,14 +303,14 @@ export const ManageRegistrations = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl p-6"
+          className="mt-8 bg-indigo-50/60 border border-indigo-200 rounded-2xl p-6"
         >
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">Export Data</h3>
               <p className="text-sm text-gray-600">Download registration data for reporting and analysis</p>
             </div>
-            <Button onClick={exportToCSV} className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white border-0">
+            <Button onClick={exportToCSV} className="bg-gray-900 hover:bg-indigo-700 text-white border-0">
               Export to CSV
             </Button>
           </div>

@@ -78,7 +78,7 @@ export const ManageUsers = () => {
   const students = filteredUsers.filter(u => u.role !== 'admin');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 py-8 px-4">
+    <div className="min-h-[100dvh] bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -88,11 +88,11 @@ export const ManageUsers = () => {
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-3 rounded-2xl">
+              <div className="bg-gray-900 p-3 rounded-xl">
                 <Users className="size-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Manage Users</h1>
+                <h1 className="text-3xl tracking-[-0.03em] text-gray-900">Manage Users</h1>
                 <p className="text-gray-600">{users.length} users total ({admins.length} admins, {students.length} students)</p>
               </div>
             </div>
@@ -116,12 +116,12 @@ export const ManageUsers = () => {
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl p-6 text-white shadow-lg"
+            className="bg-gray-900 rounded-2xl p-6 text-white shadow-lg"
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm font-medium mb-1">Total Students</p>
-                <p className="text-4xl font-bold">{students.length}</p>
+                <p className="text-4xl font-semibold">{students.length}</p>
               </div>
               <div className="bg-white/20 p-4 rounded-xl">
                 <User className="size-8" />
@@ -132,12 +132,12 @@ export const ManageUsers = () => {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-lg"
+            className="bg-gray-900 rounded-2xl p-6 text-white shadow-lg"
           >
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100 text-sm font-medium mb-1">Total Admins</p>
-                <p className="text-4xl font-bold">{admins.length}</p>
+                <p className="text-4xl font-semibold">{admins.length}</p>
               </div>
               <div className="bg-white/20 p-4 rounded-xl">
                 <Shield className="size-8" />
@@ -151,7 +151,7 @@ export const ManageUsers = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl shadow-lg shadow-gray-200/50 overflow-hidden"
+          className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] overflow-hidden"
         >
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -210,7 +210,7 @@ export const ManageUsers = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className={`size-10 rounded-full flex items-center justify-center text-white font-semibold ${
-                            user.role === 'admin' ? 'bg-gradient-to-br from-purple-500 to-pink-500' : 'bg-gradient-to-br from-blue-500 to-cyan-500'
+                            user.role === 'admin' ? 'bg-gray-900' : 'bg-gray-900'
                           }`}>
                             {user.name.charAt(0).toUpperCase()}
                           </div>

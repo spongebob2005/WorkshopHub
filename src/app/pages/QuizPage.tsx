@@ -199,7 +199,7 @@ export const QuizPage = () => {
 
   if (!workshop) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl mb-2 text-gray-700">Workshop not found</h2>
           <Button onClick={() => navigate('/')}>Back to Home</Button>
@@ -210,7 +210,7 @@ export const QuizPage = () => {
 
   if (!isUserRegistered) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="size-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Target className="size-10 text-gray-300" />
@@ -232,7 +232,7 @@ export const QuizPage = () => {
     const isPassed = score.percentage >= 70;
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-12 px-4">
+      <div className="min-h-[100dvh] bg-gray-50 py-12 px-4">
         <div className="max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -259,21 +259,21 @@ export const QuizPage = () => {
                   )}
                 </motion.div>
                 
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                  {isPassed ? 'Congratulations!' : 'Quiz Complete'}
+                <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-2">
+                  {isPassed ? 'Passed' : 'Quiz Complete'}
                 </h1>
                 <p className="text-gray-600">
                   {isPassed
-                    ? 'You passed the quiz! Great work!'
+                    ? 'You passed the quiz. Nice work.'
                     : 'Keep practicing to improve your score.'}
                 </p>
               </div>
 
               {/* Score Display */}
-              <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-8 mb-8 text-white text-center">
+              <div className="bg-gray-900 rounded-2xl p-8 mb-8 text-white text-center">
                 <p className="text-sm uppercase tracking-wider opacity-90 mb-2">Your Score</p>
                 <div className="flex items-center justify-center gap-4 mb-2">
-                  <span className="text-6xl font-bold">{score.percentage}%</span>
+                  <span className="text-6xl font-semibold">{score.percentage}%</span>
                 </div>
                 <p className="opacity-90">
                   {score.correct} out of {score.total} correct answers
@@ -284,17 +284,17 @@ export const QuizPage = () => {
               <div className="grid grid-cols-3 gap-4 mb-8">
                 <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
                   <CheckCircle2 className="w-6 h-6 text-green-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-900">{score.correct}</p>
+                  <p className="text-2xl font-semibold text-gray-900">{score.correct}</p>
                   <p className="text-xs text-gray-500">Correct</p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
                   <XCircle className="w-6 h-6 text-red-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-900">{score.total - score.correct}</p>
+                  <p className="text-2xl font-semibold text-gray-900">{score.total - score.correct}</p>
                   <p className="text-xs text-gray-500">Incorrect</p>
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
                   <Clock className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-gray-900">{formatTime(timeElapsed)}</p>
+                  <p className="text-2xl font-semibold text-gray-900">{formatTime(timeElapsed)}</p>
                   <p className="text-xs text-gray-500">Time</p>
                 </div>
               </div>
@@ -338,7 +338,7 @@ export const QuizPage = () => {
                 </Button>
                 <Button
                   onClick={() => navigate(`/workshop/${workshopId}`)}
-                  className="flex-1 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                  className="flex-1 h-12 rounded-xl bg-gray-900 hover:bg-indigo-700"
                 >
                   <Home className="w-4 h-4 mr-2" />
                   Back to Workshop
@@ -353,7 +353,7 @@ export const QuizPage = () => {
 
   // Quiz interface
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 py-8 px-4">
+    <div className="min-h-[100dvh] bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -369,7 +369,7 @@ export const QuizPage = () => {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border shadow-lg">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">{quizTitle}</h1>
+                <h1 className="text-2xl font-semibold text-gray-900 mb-1">{quizTitle}</h1>
                 <p className="text-gray-600">{workshop.title}</p>
               </div>
               <div className="flex items-center gap-4">
@@ -402,7 +402,7 @@ export const QuizPage = () => {
               {/* Question */}
               <div className="mb-8">
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-xl px-4 py-2 font-bold text-lg flex-shrink-0">
+                  <div className="bg-gray-900 text-white rounded-xl px-4 py-2 font-semibold text-lg flex-shrink-0">
                     {currentQuestionIndex + 1}
                   </div>
                   <h2 className="text-xl font-semibold text-gray-900 leading-relaxed pt-1">
@@ -428,11 +428,11 @@ export const QuizPage = () => {
                       whileTap={!showResult ? { scale: 0.98 } : {}}
                       className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
                         showCorrectAnswer
-                          ? 'bg-green-50 border-green-500 shadow-lg shadow-green-100'
+                          ? 'bg-green-50 border-green-500 shadow-lg'
                           : showIncorrectAnswer
                           ? 'bg-red-50 border-red-500 shadow-lg shadow-red-100'
                           : isSelected
-                          ? 'bg-indigo-50 border-indigo-500 shadow-lg shadow-indigo-100'
+                          ? 'bg-indigo-50 border-indigo-500 shadow-lg'
                           : 'bg-white border-gray-200 hover:border-indigo-300 hover:shadow-md'
                       } ${showResult ? 'cursor-default' : 'cursor-pointer'}`}
                     >
@@ -499,14 +499,14 @@ export const QuizPage = () => {
                   <Button
                     onClick={handleSubmitAnswer}
                     disabled={selectedOption === null}
-                    className="px-8 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-8 h-12 rounded-xl bg-gray-900 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Submit Answer
                   </Button>
                 ) : (
                   <Button
                     onClick={handleNextQuestion}
-                    className="px-8 h-12 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                    className="px-8 h-12 rounded-xl bg-gray-900 hover:bg-indigo-700"
                   >
                     {currentQuestionIndex < totalQuestions - 1 ? (
                       <>

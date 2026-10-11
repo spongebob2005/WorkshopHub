@@ -135,15 +135,15 @@ export const PaymentSuccess = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full size-8 border-2 border-gray-200 border-t-gray-900"></div>
       </div>
     );
   }
 
   if (!booking || !workshop) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl mb-4">Booking not found</h2>
           <Button onClick={() => navigate('/')}>Back to Workshops</Button>
@@ -153,17 +153,17 @@ export const PaymentSuccess = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-xl">
         {/* Success card */}
         <motion.div
           initial={{ opacity: 0, scale: 0.9, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="bg-white rounded-3xl shadow-2xl shadow-indigo-200/40 border border-white overflow-hidden"
+          className="bg-white rounded-3xl shadow-2xl border border-white overflow-hidden"
         >
           {/* Top banner */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 text-center relative overflow-hidden">
+          <div className="bg-gray-900 p-8 text-center relative overflow-hidden">
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
               {[...Array(6)].map((_, i) => (
                 <motion.div
@@ -193,8 +193,8 @@ export const PaymentSuccess = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <h1 className="text-3xl text-white mb-1">Payment Successful!</h1>
-              <p className="text-indigo-200">Your workshop registration is confirmed 🎉</p>
+              <h1 className="text-3xl text-white mb-1">Payment received</h1>
+              <p className="text-indigo-200">Your workshop registration is confirmed</p>
             </motion.div>
           </div>
 
@@ -257,7 +257,7 @@ export const PaymentSuccess = () => {
               </button>
               <button
                 onClick={() => navigate('/bookings')}
-                className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all text-sm font-medium shadow-md shadow-indigo-200/50"
+                className="flex-1 flex items-center justify-center gap-2 py-3 bg-gray-900 text-white rounded-xl hover:bg-indigo-700 transition-all text-sm font-medium shadow-md"
               >
                 <Calendar className="size-4" />
                 My Bookings

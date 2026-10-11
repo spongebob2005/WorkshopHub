@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { WorkshopCover } from '../../components/WorkshopCover';
 import { motion, AnimatePresence } from 'motion/react';
 import { api } from '../../api/client.ts';
 import { Button } from '../../components/ui/button';
@@ -20,17 +21,6 @@ interface Workshop {
   description?: string;
   image?: string;
 }
-
-const CATEGORY_GRADIENTS: Record<string, string> = {
-  'Web Development': 'from-blue-500 to-indigo-600',
-  'Design': 'from-pink-500 to-rose-600',
-  'Data Science': 'from-purple-500 to-violet-600',
-  'Marketing': 'from-orange-500 to-amber-600',
-  'Cloud Computing': 'from-cyan-500 to-blue-600',
-  'Mobile Development': 'from-green-500 to-emerald-600',
-  'Security': 'from-red-500 to-rose-600',
-  'Blockchain': 'from-yellow-500 to-amber-600',
-};
 
 export const ManageWorkshops = () => {
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
@@ -135,20 +125,20 @@ export const ManageWorkshops = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 py-8 px-4">
+    <div className="min-h-[100dvh] bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-3 rounded-2xl">
+              <div className="bg-gray-900 p-3 rounded-xl">
                 <GraduationCap className="size-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Manage Workshops</h1>
+                <h1 className="text-3xl tracking-[-0.03em] text-gray-900">Manage Workshops</h1>
                 <p className="text-gray-600">{workshops.length} workshops total</p>
               </div>
             </div>
-            <Button onClick={handleCreate} className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl shadow-lg">
+            <Button onClick={handleCreate} className="bg-gray-900 hover:bg-indigo-700 text-white rounded-xl shadow-lg">
               <Plus className="size-4 mr-2" /> Add Workshop
             </Button>
           </div>
@@ -170,20 +160,14 @@ export const ManageWorkshops = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredWorkshops.map((workshop, index) => {
-              const gradient = CATEGORY_GRADIENTS[workshop.category] || 'from-indigo-500 to-purple-600';
               return (
-                <motion.div key={workshop.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="bg-white rounded-2xl overflow-hidden shadow-lg shadow-gray-200/50 hover:shadow-xl transition-all">
-                  <div className={`relative h-36 bg-gradient-to-br ${gradient} overflow-hidden`}>
-                    {workshop.image ? (
-                      <img src={workshop.image} alt={workshop.title} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                    ) : (
-                      <div className="flex items-center justify-center h-full opacity-40"><ImagePlus className="size-12 text-white" /></div>
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-                    <span className="absolute bottom-2 left-3 text-white text-xs font-medium bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-lg">{workshop.category}</span>
+                <motion.div key={workshop.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="bg-white rounded-2xl overflow-hidden ring-1 ring-gray-900/[0.06] hover:shadow-xl transition-all">
+                  <div className="relative m-2 mb-0">
+                    <WorkshopCover category={workshop.category} image={workshop.image} title={workshop.title} className="h-36 rounded-xl" />
+                    <span className="absolute left-3 top-3 z-10 rounded-md bg-white/90 px-2 py-0.5 text-xs text-gray-800 backdrop-blur">{workshop.category}</span>
                   </div>
                   <div className="p-5">
-                    <h3 className="font-bold text-lg text-gray-900 mb-1 line-clamp-1">{workshop.title}</h3>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-1 line-clamp-1">{workshop.title}</h3>
                     <p className="text-sm text-gray-600 mb-3">by {workshop.instructor}</p>
                     <div className="space-y-1.5 mb-4 text-sm">
                       <div className="flex items-center gap-2 text-gray-600"><Calendar className="size-4" /><span>{workshop.date}</span></div>
@@ -215,7 +199,7 @@ export const ManageWorkshops = () => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">{editingWorkshop ? 'Edit Workshop' : 'Create New Workshop'}</h2>
+                <h2 className="text-2xl font-semibold text-gray-900">{editingWorkshop ? 'Edit Workshop' : 'Create New Workshop'}</h2>
                 <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X className="size-5" /></button>
               </div>
 
@@ -264,7 +248,7 @@ export const ManageWorkshops = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-xl h-44 bg-gradient-to-br from-gray-100 to-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center">
+                    <div className="rounded-xl h-44 bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center">
                       <div className="text-center"><ImagePlus className="size-10 text-gray-300 mx-auto mb-2" /><p className="text-sm text-gray-400">No image selected</p></div>
                     </div>
                   )}
@@ -316,7 +300,7 @@ export const ManageWorkshops = () => {
 
                 <div className="flex gap-3 pt-4">
                   <Button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200 border-0">Cancel</Button>
-                  <Button type="submit" className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0">{editingWorkshop ? 'Update' : 'Create'} Workshop</Button>
+                  <Button type="submit" className="flex-1 bg-gray-900 hover:bg-indigo-700 text-white border-0">{editingWorkshop ? 'Update' : 'Create'} Workshop</Button>
                 </div>
               </form>
             </motion.div>

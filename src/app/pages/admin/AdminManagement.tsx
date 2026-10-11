@@ -186,7 +186,7 @@ export const AdminManagement = () => {
   const students = filteredUsers.filter(u => u.role !== 'admin');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 py-8 px-4">
+    <div className="min-h-[100dvh] bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -194,7 +194,7 @@ export const AdminManagement = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Management Dashboard</h1>
+          <h1 className="text-3xl tracking-[-0.03em] text-gray-900 mb-2">Management Dashboard</h1>
           <p className="text-gray-600">Manage users and workshops in one place</p>
         </motion.div>
 
@@ -204,7 +204,7 @@ export const AdminManagement = () => {
             onClick={() => setActiveTab('users')}
             className={`px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 ${
               activeTab === 'users'
-                ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md'
+                ? 'bg-gray-900 text-white shadow-md'
                 : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
@@ -215,7 +215,7 @@ export const AdminManagement = () => {
             onClick={() => setActiveTab('workshops')}
             className={`px-6 py-3 rounded-xl font-medium transition-all flex items-center gap-2 ${
               activeTab === 'workshops'
-                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                ? 'bg-gray-900 text-white shadow-md'
                 : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
@@ -249,7 +249,7 @@ export const AdminManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-600 text-sm font-medium mb-1">Total Users</p>
-                    <p className="text-3xl font-bold text-gray-900">{users.length}</p>
+                    <p className="text-3xl font-semibold text-gray-900">{users.length}</p>
                   </div>
                   <div className="bg-blue-50 p-3 rounded-xl">
                     <Users className="size-6 text-blue-600" />
@@ -261,7 +261,7 @@ export const AdminManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-600 text-sm font-medium mb-1">Admins</p>
-                    <p className="text-3xl font-bold text-gray-900">{admins.length}</p>
+                    <p className="text-3xl font-semibold text-gray-900">{admins.length}</p>
                   </div>
                   <div className="bg-purple-50 p-3 rounded-xl">
                     <Shield className="size-6 text-purple-600" />
@@ -273,7 +273,7 @@ export const AdminManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-600 text-sm font-medium mb-1">Students</p>
-                    <p className="text-3xl font-bold text-gray-900">{students.length}</p>
+                    <p className="text-3xl font-semibold text-gray-900">{students.length}</p>
                   </div>
                   <div className="bg-green-50 p-3 rounded-xl">
                     <User className="size-6 text-green-600" />
@@ -321,7 +321,7 @@ export const AdminManagement = () => {
                         >
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="size-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center text-white font-semibold">
+                              <div className="size-10 rounded-full bg-gray-900 flex items-center justify-center text-white font-semibold">
                                 {user.name?.charAt(0).toUpperCase()}
                               </div>
                               <span className="font-medium text-gray-900">{user.name}</span>
@@ -395,7 +395,7 @@ export const AdminManagement = () => {
                   setWorkshopFormData({});
                   setShowWorkshopModal(true);
                 }}
-                className="h-12 px-6 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0"
+                className="h-12 px-6 bg-gray-900 hover:bg-indigo-700 text-white border-0"
               >
                 <Plus className="size-5 mr-2" />
                 Add Workshop
@@ -432,7 +432,7 @@ export const AdminManagement = () => {
                     </div>
                   </div>
 
-                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2">{workshop.title}</h3>
+                  <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{workshop.title}</h3>
                   <p className="text-sm text-gray-600 mb-4">by {workshop.instructor}</p>
 
                   <div className="space-y-2 text-sm text-gray-600">
@@ -466,7 +466,7 @@ export const AdminManagement = () => {
                 className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
               >
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">
+                  <h2 className="text-2xl font-semibold text-gray-900">
                     {editingWorkshop ? 'Edit Workshop' : 'Add New Workshop'}
                   </h2>
                   <button
@@ -586,7 +586,7 @@ export const AdminManagement = () => {
                   <div className="flex items-center gap-3 pt-4">
                     <Button
                       onClick={handleSaveWorkshop}
-                      className="flex-1 h-11 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0"
+                      className="flex-1 h-11 bg-gray-900 hover:bg-indigo-700 text-white border-0"
                     >
                       {editingWorkshop ? 'Update Workshop' : 'Create Workshop'}
                     </Button>

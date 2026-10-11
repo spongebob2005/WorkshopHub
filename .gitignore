@@ -1,5 +1,13 @@
+# dependencies
+node_modules/
+
+# environment files
 .env
-node_modules
-.DS_Store
+.env.*
+!.env.example
+
+# build / deploy output
 .vercel
-.env*.local
+
+# OS
+.DS_Store

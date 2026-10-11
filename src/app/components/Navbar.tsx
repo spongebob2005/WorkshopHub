@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Button } from './ui/button';
-import { LogOut, User, Calendar, Home, BookOpen, Menu, X, Sparkles, Shield } from 'lucide-react';
+import { LogOut, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Logo } from './Logo';
 
 export const Navbar = () => {
   const { user, logout, isAuthenticated, isAdmin } = useAuth();
@@ -13,8 +13,9 @@ export const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 8);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -29,187 +30,149 @@ export const Navbar = () => {
 
   const navLinks = isAuthenticated
     ? [
-        { to: '/', label: 'Workshops', icon: Home },
-        { to: '/bookings', label: 'My Bookings', icon: Calendar },
-        ...(isAdmin ? [{ to: '/admin', label: 'Admin Dashboard', icon: Shield }] : []),
+        { to: '/', label: 'Workshops' },
+        { to: '/bookings', label: 'My bookings' },
+        ...(isAdmin ? [{ to: '/admin', label: 'Admin' }] : []),
       ]
     : [];
 
   const isActive = (path: string) => location.pathname === path;
+  const initials = user?.name
+    ?.split(' ')
+    .map(part => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
   return (
-    <>
-      <motion.nav
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className={`sticky top-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? 'bg-white/80 backdrop-blur-xl border-b border-white/20 shadow-lg shadow-indigo-500/5'
-            : 'bg-white/95 backdrop-blur-sm border-b border-gray-100'
-        }`}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-indigo-500 rounded-xl blur-sm opacity-40 group-hover:opacity-70 transition-opacity" />
-                <div className="relative bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-xl">
-                  <Sparkles className="size-5 text-white" />
-                </div>
-              </div>
-              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent font-semibold text-xl tracking-tight">
-                WorkshopHub
-              </span>
-            </Link>
+    <nav
+      className={`sticky top-0 z-40 transition-[background-color,border-color,box-shadow] duration-300 ${
+        scrolled
+          ? 'border-b border-gray-900/[0.06] bg-gray-50/80 backdrop-blur-xl'
+          : 'border-b border-transparent bg-gray-50'
+      }`}
+    >
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between gap-6">
+          <Logo />
 
-            {/* Desktop Nav Links */}
-            <div className="hidden md:flex items-center gap-1">
-              {navLinks.map(({ to, label, icon: Icon }) => (
-                <Link key={to} to={to}>
-                  <div
-                    className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm transition-all duration-200 ${
-                      isActive(to)
-                        ? 'text-indigo-600 bg-indigo-50'
-                        : 'text-gray-600 hover:text-indigo-600 hover:bg-indigo-50/60'
-                    }`}
-                  >
-                    <Icon className="size-4" />
-                    {label}
-                    {isActive(to) && (
-                      <motion.div
-                        layoutId="navUnderline"
-                        className="absolute bottom-1 left-4 right-4 h-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"
-                        transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
-                      />
-                    )}
-                  </div>
+          {/* Desktop links */}
+          <div className="hidden flex-1 items-center gap-1 md:flex">
+            {navLinks.map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                aria-current={isActive(to) ? 'page' : undefined}
+                className={`relative isolate rounded-lg px-3.5 py-2 text-sm transition-colors ${
+                  isActive(to) ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                {isActive(to) && (
+                  <motion.span
+                    layoutId="nav-pill"
+                    className="absolute inset-0 -z-10 rounded-lg bg-white shadow-sm ring-1 ring-gray-900/[0.06]"
+                    transition={{ type: 'spring', bounce: 0.18, duration: 0.45 }}
+                  />
+                )}
+                {label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Desktop auth */}
+          <div className="hidden items-center gap-2 md:flex">
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center gap-2.5 rounded-full py-1 pl-1 pr-3">
+                  <span className="flex size-8 items-center justify-center rounded-lg bg-indigo-100 text-xs font-semibold text-indigo-800">
+                    {initials}
+                  </span>
+                  <span className="text-sm text-gray-700">{user?.name}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="press flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-900"
+                >
+                  <LogOut className="size-4" strokeWidth={1.75} />
+                  Log out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="rounded-lg px-3.5 py-2 text-sm text-gray-600 transition-colors hover:text-gray-900">
+                  Sign in
+                </Link>
+                <Link
+                  to="/register"
+                  className="press rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                >
+                  Create account
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Mobile toggle */}
+          <button
+            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 md:hidden"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileOpen}
+          >
+            {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.18 }}
+            className="border-t border-gray-900/[0.06] bg-gray-50 md:hidden"
+          >
+            <div className="space-y-1 px-4 py-3">
+              {navLinks.map(({ to, label }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  className={`block rounded-lg px-3 py-2.5 text-sm transition-colors ${
+                    isActive(to) ? 'bg-white text-gray-900 ring-1 ring-gray-900/[0.06]' : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {label}
                 </Link>
               ))}
-            </div>
-
-            {/* Desktop Auth */}
-            <div className="hidden md:flex items-center gap-3">
-              {isAuthenticated ? (
-                <>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-xl">
-                    <div className="size-7 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center">
-                      <User className="size-3.5 text-white" />
-                    </div>
-                    <span className="text-sm text-gray-700 font-medium">{user?.name}</span>
+              <div className="mt-2 space-y-2 border-t border-gray-200 pt-3">
+                {isAuthenticated ? (
+                  <>
+                    <p className="px-3 text-sm text-gray-500">Signed in as {user?.name}</p>
+                    <button
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <LogOut className="size-4" strokeWidth={1.75} />
+                      Log out
+                    </button>
+                  </>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link to="/login" className="rounded-lg border border-gray-200 bg-white py-2.5 text-center text-sm text-gray-700">
+                      Sign in
+                    </Link>
+                    <Link to="/register" className="rounded-lg bg-gray-900 py-2.5 text-center text-sm text-white">
+                      Create account
+                    </Link>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleLogout}
-                    className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 transition-all"
-                  >
-                    <LogOut className="size-3.5 mr-1.5" />
-                    Logout
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => navigate('/login')}
-                    className="text-gray-600 hover:text-indigo-600 hover:bg-indigo-50"
-                  >
-                    Login
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => navigate('/register')}
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white border-0 shadow-md shadow-indigo-200"
-                  >
-                    Get Started
-                  </Button>
-                </>
-              )}
-            </div>
-
-            {/* Mobile Menu Toggle */}
-            <button
-              className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-              onClick={() => setMobileOpen(!mobileOpen)}
-            >
-              {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {mobileOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="md:hidden border-t border-gray-100 bg-white/95 backdrop-blur-xl overflow-hidden"
-            >
-              <div className="px-4 py-3 space-y-1">
-                {navLinks.map(({ to, label, icon: Icon }) => (
-                  <Link
-                    key={to}
-                    to={to}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all ${
-                      isActive(to)
-                        ? 'bg-indigo-50 text-indigo-600'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon className="size-4" />
-                    {label}
-                  </Link>
-                ))}
-                <div className="pt-2 border-t border-gray-100 mt-2 space-y-2">
-                  {isAuthenticated ? (
-                    <>
-                      <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600">
-                        <User className="size-4" />
-                        {user?.name}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleLogout}
-                        className="w-full text-red-600 border-red-200"
-                      >
-                        <LogOut className="size-3.5 mr-1.5" />
-                        Logout
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full"
-                        onClick={() => navigate('/login')}
-                      >
-                        Login
-                      </Button>
-                      <Button
-                        size="sm"
-                        className="w-full bg-gradient-to-r from-indigo-600 to-purple-600"
-                        onClick={() => navigate('/register')}
-                      >
-                        Get Started
-                      </Button>
-                    </>
-                  )}
-                </div>
+                )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.nav>
-
-      {/* Spacer for mobile menu overlap prevention */}
-      <div className="hidden" />
-    </>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </nav>
   );
 };

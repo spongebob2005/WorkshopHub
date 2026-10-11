@@ -6,18 +6,21 @@ import { WorkshopProvider } from './contexts/WorkshopContext';
 import { SpeedInsights } from '@vercel/speed-insights/react';
 import { Analytics } from '@vercel/analytics/react';
 import ErrorBoundary from './components/ErrorBoundary';
+import { MotionConfig } from 'motion/react';
 
 export default function App() {
   return (
     <ErrorBoundary>
+      <MotionConfig reducedMotion="user">
       <AuthProvider>
         <WorkshopProvider>
           <RouterProvider router={router} />
-          <Toaster />
+          <Toaster position="bottom-right" />
           <Analytics />
           <SpeedInsights />
         </WorkshopProvider>
       </AuthProvider>
+      </MotionConfig>
     </ErrorBoundary>
   );
 }

@@ -7,7 +7,7 @@ import {
   Calendar, Clock, DollarSign, Users, User, ArrowLeft, CheckCircle2,
   BookOpen, Zap, Share2, MapPin, FileText, Video, HelpCircle, UserCheck
 } from 'lucide-react';
-import { ImageWithFallback } from '../components/figma/ImageWithFallback';
+import { WorkshopCover } from '../components/WorkshopCover';
 import { motion } from 'motion/react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 
@@ -17,17 +17,6 @@ interface User {
   email: string;
   role?: string;
 }
-
-const CATEGORY_GRADIENTS: Record<string, string> = {
-  'Web Development': 'from-blue-600 to-indigo-700',
-  'Design': 'from-pink-600 to-rose-700',
-  'Data Science': 'from-purple-600 to-violet-700',
-  'Marketing': 'from-orange-600 to-amber-700',
-  'Cloud Computing': 'from-cyan-600 to-blue-700',
-  'Mobile Development': 'from-green-600 to-emerald-700',
-  'Security': 'from-red-600 to-rose-700',
-  'Blockchain': 'from-yellow-600 to-amber-700',
-};
 
 interface RegisteredUser {
   id: string;
@@ -49,15 +38,15 @@ export const WorkshopDetails = () => {
 
   if (workshopsLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full size-8 border-2 border-gray-200 border-t-gray-900"></div>
       </div>
     );
   }
 
   if (!workshop) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="size-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <BookOpen className="size-10 text-gray-300" />
@@ -72,12 +61,11 @@ export const WorkshopDetails = () => {
 
   const seatPercentage = (workshop.availableSeats / workshop.totalSeats) * 100;
   const seatsBooked = workshop.totalSeats - workshop.availableSeats;
-  const gradient = CATEGORY_GRADIENTS[workshop.category] || 'from-indigo-600 to-purple-700';
 
   const getSeatInfo = () => {
     if (seatPercentage > 50) return { color: 'text-green-600', bg: 'bg-green-50 border-green-200', bar: 'bg-green-500', text: 'Good availability' };
-    if (seatPercentage > 20) return { color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200', bar: 'bg-yellow-500', text: 'Filling up fast!' };
-    if (seatPercentage > 0) return { color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200', bar: 'bg-orange-500', text: 'Almost full!' };
+    if (seatPercentage > 20) return { color: 'text-yellow-600', bg: 'bg-yellow-50 border-yellow-200', bar: 'bg-yellow-500', text: 'Filling up fast' };
+    if (seatPercentage > 0) return { color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200', bar: 'bg-orange-500', text: 'Almost full' };
     return { color: 'text-red-600', bg: 'bg-red-50 border-red-200', bar: 'bg-red-500', text: 'Sold out' };
   };
 
@@ -98,48 +86,51 @@ export const WorkshopDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-[100dvh] bg-gray-50 pb-20">
       {/* Hero Banner */}
-      <div className={`relative overflow-hidden bg-gradient-to-br ${gradient}`} style={{ height: '340px' }}>
-        <ImageWithFallback
-          src={`https://source.unsplash.com/1600x600/?${encodeURIComponent(workshop.image)}`}
-          alt={workshop.title}
-          className="w-full h-full object-cover opacity-20"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+      <div className="px-3 pt-2 sm:px-4">
+        <div className="relative mx-auto max-w-[88rem] overflow-hidden rounded-3xl">
+          <WorkshopCover
+            category={workshop.category}
+            image={workshop.image}
+            title={workshop.title}
+            className="h-[22rem] md:h-[26rem]"
+          />
+          <div className="absolute inset-0 z-[2] bg-gradient-to-t from-gray-950/90 via-gray-950/40 to-gray-950/10" />
 
-        <div className="absolute top-6 left-6">
-          <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 bg-white/15 backdrop-blur-sm border border-white/25 text-white rounded-xl px-4 py-2 text-sm font-medium hover:bg-white/25 transition-all"
-          >
-            <ArrowLeft className="size-4" />
-            Back
-          </button>
-        </div>
+          <div className="absolute inset-x-0 top-0 z-[3] flex items-center justify-between p-5 sm:p-6">
+            <button
+              onClick={() => navigate('/')}
+              className="press flex items-center gap-2 rounded-lg bg-white/10 px-3.5 py-2 text-sm text-white ring-1 ring-white/20 backdrop-blur-md hover:bg-white/20"
+            >
+              <ArrowLeft className="size-4" />
+              All workshops
+            </button>
+            <span className="rounded-lg bg-white/10 px-3 py-1.5 text-sm text-white ring-1 ring-white/20 backdrop-blur-md">
+              {workshop.category}
+            </span>
+          </div>
 
-        <div className="absolute top-6 right-6">
-          <span className="bg-white/20 backdrop-blur-sm border border-white/25 text-white px-3 py-1.5 rounded-xl text-sm font-medium">
-            {workshop.category}
-          </span>
-        </div>
-
-        <div className="absolute bottom-0 left-0 right-0 p-8">
-          <div className="max-w-5xl mx-auto">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-              <h1 className="text-3xl md:text-4xl text-white mb-2 leading-tight max-w-2xl">
-                {workshop.title}
-              </h1>
-              <div className="flex items-center gap-2 text-white/80 text-sm">
-                <User className="size-4" />
-                <span>Instructor: <span className="font-medium text-white">{workshop.instructor}</span></span>
-              </div>
-            </motion.div>
+          <div className="absolute inset-x-0 bottom-0 z-[3] p-6 sm:p-10">
+            <div className="mx-auto max-w-5xl">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}>
+                <p className="eyebrow mb-3 text-indigo-200">
+                  {new Date(workshop.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+                </p>
+                <h1 className="max-w-[22ch] text-3xl leading-[1.05] tracking-[-0.03em] text-white md:text-5xl">
+                  {workshop.title}
+                </h1>
+                <p className="mt-3 flex items-center gap-2 text-sm text-white/70">
+                  <User className="size-4" />
+                  Taught by <span className="text-white">{workshop.instructor}</span>
+                </p>
+              </motion.div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative">
         <div className="grid lg:grid-cols-3 gap-6">
           {/* Main Content */}
           <motion.div
@@ -149,7 +140,7 @@ export const WorkshopDetails = () => {
             className="lg:col-span-2 space-y-6"
           >
             {/* Quick info bar */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <div className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] p-5">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
                   {
@@ -197,7 +188,7 @@ export const WorkshopDetails = () => {
               
               <TabsContent value="about" className="mt-6 space-y-6">
                 {/* About */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] p-6">
                   <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <BookOpen className="size-5 text-indigo-500" />
                     About This Workshop
@@ -206,7 +197,7 @@ export const WorkshopDetails = () => {
                 </div>
 
                 {/* Skills */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] p-6">
                   <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <CheckCircle2 className="size-5 text-indigo-500" />
                     Skills You'll Learn
@@ -214,7 +205,7 @@ export const WorkshopDetails = () => {
                   <div className="grid grid-cols-2 gap-3">
                     {workshop.skills.map(skill => (
                       <div key={skill} className="flex items-center gap-2.5 bg-gray-50 rounded-xl p-3">
-                        <div className="size-2 rounded-full bg-gradient-to-r from-indigo-400 to-purple-400 flex-shrink-0" />
+                        <div className="size-2 rounded-full bg-indigo-500 flex-shrink-0" />
                         <span className="text-sm text-gray-700 font-medium">{skill}</span>
                       </div>
                     ))}
@@ -223,7 +214,7 @@ export const WorkshopDetails = () => {
               </TabsContent>
 
               <TabsContent value="content" className="mt-6 space-y-6">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] p-6">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                       <FileText className="size-5 text-indigo-500" />
@@ -334,7 +325,7 @@ export const WorkshopDetails = () => {
               </TabsContent>
 
               <TabsContent value="attendees" className="mt-6">
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] p-6">
                   <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
                     <UserCheck className="size-5 text-indigo-500" />
                     Registered Attendees ({registeredUsers.length})
@@ -344,7 +335,7 @@ export const WorkshopDetails = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {registeredUsers.map((u, i) => (
                         <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
-                          <div className="size-10 rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center text-indigo-700 font-semibold">
+                          <div className="size-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-semibold">
                             {u.name.charAt(0).toUpperCase()}
                           </div>
                           <span className="font-medium text-gray-700">{u.name}</span>
@@ -357,7 +348,7 @@ export const WorkshopDetails = () => {
                   ) : (
                     <div className="text-center py-8 text-gray-500">
                       <Users className="size-12 mx-auto text-gray-300 mb-3" />
-                      <p>Be the first to register for this workshop!</p>
+                      <p>No one has registered yet. Your seat could be the first.</p>
                     </div>
                   )}
                 </div>
@@ -373,12 +364,12 @@ export const WorkshopDetails = () => {
             className="space-y-4"
           >
             {/* Price & Register Card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden sticky top-6">
-              <div className={`bg-gradient-to-r ${gradient} p-5`}>
+            <div className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] overflow-hidden sticky top-20">
+              <div className="grain bg-gray-950 p-5">
                 <p className="text-white/70 text-xs mb-1">Workshop Price</p>
                 <div className="flex items-baseline gap-1">
                   <DollarSign className="size-5 text-white mb-0.5" />
-                  <span className="text-4xl text-white font-semibold">{workshop.price}</span>
+                  <span className="text-4xl font-semibold tracking-tight text-white tabular">{workshop.price}</span>
                 </div>
               </div>
               <div className="p-5">
@@ -400,7 +391,7 @@ export const WorkshopDetails = () => {
                       className={`w-full rounded-xl border-0 text-base h-12 shadow-lg transition-all ${
                         workshop.availableSeats === 0
                           ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none'
-                          : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-indigo-200/60 hover:shadow-indigo-300/60 hover:-translate-y-0.5'
+                          : 'bg-gray-900 hover:bg-indigo-700 text-white hover:-translate-y-0.5'
                       }`}
                     >
                       {workshop.availableSeats === 0 ? 'Workshop Full' : (isAuthenticated ? 'Register Now →' : 'Login to Register')}
@@ -442,11 +433,11 @@ export const WorkshopDetails = () => {
             </div>
 
             {/* Instructor card */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <div className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] p-5">
               <h3 className="text-sm font-medium text-gray-700 mb-3">Your Instructor</h3>
               <div className="flex items-center gap-3">
-                <div className={`size-12 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center flex-shrink-0`}>
-                  <span className="text-white text-lg font-semibold">
+                <div className="size-12 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                  <span className="font-display text-2xl text-indigo-800">
                     {workshop.instructor.charAt(0)}
                   </span>
                 </div>

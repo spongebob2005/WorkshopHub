@@ -1,9 +1,9 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'motion/react';
-import { LayoutDashboard, GraduationCap, BookOpen, LogOut, Sparkles, Home, Users } from 'lucide-react';
-import { Button } from './ui/button';
+import { LogOut, ArrowUpRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { Logo } from './Logo';
 
 export const AdminNavbar = () => {
   const { user, logout } = useAuth();
@@ -12,111 +12,100 @@ export const AdminNavbar = () => {
 
   const handleLogout = () => {
     logout();
-    toast.success('Logged out successfully');
+    toast.success('Signed out of the admin console');
     navigate('/login');
   };
 
   const navItems = [
-    { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { path: '/admin/workshops', label: 'Management', icon: GraduationCap },
-    { path: '/admin/users', label: 'Users', icon: Users },
-    { path: '/admin/registrations', label: 'Registrations', icon: BookOpen },
+    { path: '/admin', label: 'Overview' },
+    { path: '/admin/workshops', label: 'Workshops' },
+    { path: '/admin/users', label: 'Users' },
+    { path: '/admin/registrations', label: 'Registrations' },
   ];
 
-  return (
-    <nav className="bg-white/80 backdrop-blur-lg border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/admin" className="flex items-center gap-2">
-            <div className="bg-gradient-to-br from-purple-600 to-pink-600 p-2 rounded-xl">
-              <Sparkles className="size-5 text-white" />
-            </div>
-            <div>
-              <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                WorkshopHub
-              </span>
-              <span className="ml-2 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-medium">
-                Admin
-              </span>
-            </div>
-          </Link>
+  const initials = user?.name
+    ?.split(' ')
+    .map(part => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
 
-          {/* Navigation Links */}
-          <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
+  return (
+    <nav className="sticky top-0 z-40 border-b border-gray-900/[0.06] bg-gray-50/85 backdrop-blur-xl">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between gap-6">
+          <Logo to="/admin" tag="Admin" />
+
+          <div className="hidden flex-1 items-center gap-1 md:flex">
+            {navItems.map(item => {
               const isActive = location.pathname === item.path;
               return (
                 <Link
                   key={item.path}
                   to={item.path}
-                  className="relative px-4 py-2 rounded-lg transition-colors"
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`relative isolate rounded-lg px-3.5 py-2 text-sm transition-colors ${
+                    isActive ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'
+                  }`}
                 >
-                  <div className={`flex items-center gap-2 ${
-                    isActive ? 'text-purple-600' : 'text-gray-600 hover:text-gray-900'
-                  }`}>
-                    <item.icon className="size-4" />
-                    <span className="text-sm font-medium">{item.label}</span>
-                  </div>
                   {isActive && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-purple-50 rounded-lg -z-10"
-                      transition={{ type: 'spring', duration: 0.5 }}
+                    <motion.span
+                      layoutId="admin-pill"
+                      className="absolute inset-0 -z-10 rounded-lg bg-white shadow-sm ring-1 ring-gray-900/[0.06]"
+                      transition={{ type: 'spring', bounce: 0.18, duration: 0.45 }}
                     />
                   )}
+                  {item.label}
                 </Link>
               );
             })}
           </div>
 
-          {/* Right Side */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 sm:gap-2">
             <Link
               to="/"
-              className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="hidden items-center gap-1 rounded-lg px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:flex"
             >
-              <Home className="size-4" />
-              <span className="hidden md:inline">Student View</span>
+              Student site
+              <ArrowUpRight className="size-3.5" />
             </Link>
-            
-            <div className="h-6 w-px bg-gray-300" />
-            
-            <div className="flex items-center gap-3">
-              <div className="hidden md:block text-right">
-                <p className="text-sm font-medium text-gray-900">{user?.name}</p>
+            <div className="mx-1 hidden h-5 w-px bg-gray-200 sm:block" />
+            <div className="flex items-center gap-2.5 px-1">
+              <span
+                className="flex size-8 items-center justify-center rounded-lg bg-gray-900 text-xs font-semibold text-white"
+                title={user?.email}
+              >
+                {initials}
+              </span>
+              <div className="hidden leading-tight lg:block">
+                <p className="text-sm text-gray-900">{user?.name}</p>
                 <p className="text-xs text-gray-500">{user?.email}</p>
               </div>
-              <div className="size-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold">
-                {user?.name?.charAt(0).toUpperCase()}
-              </div>
             </div>
-
-            <Button
+            <button
               onClick={handleLogout}
-              className="bg-gray-100 text-gray-700 hover:bg-gray-200 border-0"
+              aria-label="Log out"
+              className="press flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-900"
             >
-              <LogOut className="size-4 md:mr-2" />
-              <span className="hidden md:inline">Logout</span>
-            </Button>
+              <LogOut className="size-4" strokeWidth={1.75} />
+              <span className="hidden md:inline">Log out</span>
+            </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        <div className="md:hidden flex items-center gap-1 pb-2 overflow-x-auto">
-          {navItems.map((item) => {
+        {/* Mobile tabs */}
+        <div className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-2 md:hidden">
+          {navItems.map(item => {
             const isActive = location.pathname === item.path;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg whitespace-nowrap text-sm ${
-                  isActive
-                    ? 'bg-purple-50 text-purple-600'
-                    : 'text-gray-600 hover:bg-gray-100'
+                aria-current={isActive ? 'page' : undefined}
+                className={`whitespace-nowrap rounded-lg px-3 py-1.5 text-sm ${
+                  isActive ? 'bg-white text-gray-900 ring-1 ring-gray-900/[0.06]' : 'text-gray-500 hover:bg-gray-100'
                 }`}
               >
-                <item.icon className="size-4" />
                 {item.label}
               </Link>
             );

@@ -1,48 +1,43 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useWorkshops } from '../contexts/WorkshopContext';
 import { WorkshopCard } from '../components/WorkshopCard';
-import { Input } from '../components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Search, Filter, BookOpen, Users, Zap, Star, TrendingUp } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
+import { WorkshopCover } from '../components/WorkshopCover';
+import { Search, X, ArrowRight, ArrowUpRight } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
-const CATEGORY_COLORS: Record<string, string> = {
-  'Web Development': 'bg-blue-100 text-blue-700 border-blue-200',
-  'Design': 'bg-pink-100 text-pink-700 border-pink-200',
-  'Data Science': 'bg-purple-100 text-purple-700 border-purple-200',
-  'Marketing': 'bg-orange-100 text-orange-700 border-orange-200',
-  'Cloud Computing': 'bg-cyan-100 text-cyan-700 border-cyan-200',
-  'Mobile Development': 'bg-green-100 text-green-700 border-green-200',
-  'Security': 'bg-red-100 text-red-700 border-red-200',
-  'Blockchain': 'bg-yellow-100 text-yellow-700 border-yellow-200',
-};
+const ease = [0.22, 1, 0.36, 1] as const;
 
 const containerVariants = {
   hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.08 },
-  },
+  visible: { transition: { staggerChildren: 0.06 } },
 };
 
 const cardVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeInOut" } },
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease } },
 };
+
+const CardSkeleton = () => (
+  <div className="flex flex-col overflow-hidden rounded-2xl bg-white p-2 ring-1 ring-gray-900/[0.06]">
+    <div className="aspect-[16/9] animate-pulse rounded-xl bg-gray-100" />
+    <div className="space-y-3 p-3 pt-5">
+      <div className="h-3 w-1/3 animate-pulse rounded bg-gray-100" />
+      <div className="h-4 w-4/5 animate-pulse rounded bg-gray-100" />
+      <div className="h-3 w-1/2 animate-pulse rounded bg-gray-100" />
+      <div className="h-3 w-full animate-pulse rounded bg-gray-100" />
+      <div className="mt-6 h-10 w-full animate-pulse rounded-lg bg-gray-100" />
+    </div>
+  </div>
+);
 
 export const Home = () => {
   const { workshops, loading } = useWorkshops();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [heroVisible, setHeroVisible] = useState(false);
-
-  useEffect(() => {
-    const t = setTimeout(() => setHeroVisible(true), 100);
-    return () => clearTimeout(t);
-  }, []);
 
   const categories = useMemo(() => {
     const cats = workshops.map(w => w.category);
@@ -50,258 +45,237 @@ export const Home = () => {
   }, [workshops]);
 
   const filteredWorkshops = useMemo(() => {
+    const term = searchTerm.toLowerCase();
     return workshops.filter(workshop => {
       const matchesSearch =
-        workshop.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        workshop.instructor.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        workshop.description.toLowerCase().includes(searchTerm.toLowerCase());
+        workshop.title.toLowerCase().includes(term) ||
+        workshop.instructor.toLowerCase().includes(term) ||
+        workshop.description.toLowerCase().includes(term);
       const matchesCategory = categoryFilter === 'all' || workshop.category === categoryFilter;
       return matchesSearch && matchesCategory;
     });
   }, [workshops, searchTerm, categoryFilter]);
 
-  const stats = useMemo(() => ({
-    total: workshops.length,
-    categories: new Set(workshops.map(w => w.category)).size,
-    available: workshops.filter(w => w.availableSeats > 0).length,
-  }), [workshops]);
+  const stats = useMemo(
+    () => ({
+      total: workshops.length,
+      categories: new Set(workshops.map(w => w.category)).size,
+      open: workshops.filter(w => w.availableSeats > 0).length,
+      seats: workshops.reduce((sum, w) => sum + w.availableSeats, 0),
+    }),
+    [workshops],
+  );
+
+  const upcoming = useMemo(
+    () =>
+      [...workshops]
+        .filter(w => w.availableSeats > 0)
+        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+        .slice(0, 3),
+    [workshops],
+  );
+
+  const hasFilters = searchTerm !== '' || categoryFilter !== 'all';
+  const clearFilters = () => {
+    setSearchTerm('');
+    setCategoryFilter('all');
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-indigo-800">
-        {/* Animated background orbs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            animate={{ scale: [1, 1.2, 1], opacity: [0.15, 0.25, 0.15] }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute -top-20 -left-20 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{ scale: [1, 1.3, 1], opacity: [0.1, 0.2, 0.1] }}
-            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
-            className="absolute top-10 right-10 w-80 h-80 bg-purple-400 rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{ scale: [1, 1.15, 1], opacity: [0.08, 0.18, 0.08] }}
-            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut', delay: 4 }}
-            className="absolute -bottom-20 left-1/2 w-96 h-72 bg-blue-400 rounded-full blur-3xl"
-          />
-          {/* Grid dots */}
-          <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: 'radial-gradient(circle, #ffffff 1px, transparent 1px)',
-              backgroundSize: '40px 40px',
-            }}
-          />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-28">
-          <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: heroVisible ? 1 : 0, y: heroVisible ? 0 : 40 }}
-            transition={{ duration: 0.7, ease: 'easeOut' }}
-          >
-            {/* Badge */}
-            <div className="flex items-center gap-2 mb-6">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                className="flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 px-4 py-1.5 rounded-full text-sm"
-              >
-                <Star className="size-3.5 fill-yellow-400 text-yellow-400" />
-                Learn from industry experts
-              </motion.div>
-            </div>
-
-            <h1 className="text-5xl md:text-6xl text-white mb-5 leading-tight tracking-tight">
-              Level Up Your Skills{' '}
-              <span className="relative inline-block">
-                <span className="bg-gradient-to-r from-yellow-300 via-orange-300 to-pink-300 bg-clip-text text-transparent">
-                  Masterclass
-                </span>
-                <motion.div
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ delay: 0.8, duration: 0.6 }}
-                  className="absolute -bottom-1 left-0 right-0 h-1 bg-gradient-to-r from-yellow-300 to-pink-300 rounded-full origin-left"
-                />
-              </span>
+    <main className="bg-gray-50 pt-2">
+      {/* Hero */}
+      <section className="mx-auto max-w-7xl px-4 pb-6 pt-12 sm:px-6 md:pt-20 lg:px-8">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1.2fr_1fr] lg:gap-16">
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}>
+            <p className="mb-5 text-sm font-medium text-indigo-700">
+              {isAuthenticated ? `Welcome back, ${user?.name?.split(' ')[0]}` : 'Small groups, live instructors'}
+            </p>
+            <h1 className="max-w-[16ch] text-4xl font-semibold leading-[1.05] tracking-[-0.035em] text-gray-900 sm:text-5xl lg:text-6xl">
+              Learn the craft from people who <span className="text-indigo-700">do it daily.</span>
             </h1>
-            <p className="text-lg text-indigo-200 max-w-2xl mb-10 leading-relaxed">
-              Join expert-led workshops designed to accelerate your career. Interactive sessions,
-              real-world projects, and a vibrant learning community.
+            <p className="mt-6 max-w-[48ch] text-base leading-relaxed text-gray-500 sm:text-lg">
+              Hands-on workshops in development, design, data and cloud. Book a seat, take the pre-quiz, show up ready.
             </p>
 
-            {/* CTA Buttons */}
-            {!isAuthenticated && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="flex flex-wrap gap-4 mb-12"
-              >
-                <button
-                  onClick={() => navigate('/register')}
-                  className="px-7 py-3 bg-white text-indigo-700 rounded-xl font-medium hover:bg-indigo-50 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              {isAuthenticated ? (
+                <a
+                  href="#catalog"
+                  className="press group flex items-center gap-2 rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-700"
                 >
-                  Get Started Free
-                </button>
-                <button
-                  onClick={() => navigate('/login')}
-                  className="px-7 py-3 bg-white/10 backdrop-blur-sm border border-white/30 text-white rounded-xl font-medium hover:bg-white/20 transition-all"
-                >
-                  Sign In
-                </button>
-              </motion.div>
-            )}
-
-            {/* Stats row */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="flex flex-wrap gap-6"
-            >
-              {[
-                { icon: BookOpen, value: stats.total, label: 'Workshops' },
-                { icon: TrendingUp, value: stats.categories, label: 'Categories' },
-                { icon: Users, value: stats.available, label: 'Open Now' },
-                { icon: Zap, value: '100%', label: 'Online' },
-              ].map(({ icon: Icon, value, label }, i) => (
-                <motion.div
-                  key={label}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.7 + i * 0.1 }}
-                  className="flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/15 rounded-2xl px-5 py-3"
-                >
-                  <div className="bg-white/20 rounded-xl p-2">
-                    <Icon className="size-4 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-white font-semibold text-lg leading-none">{value}</div>
-                    <div className="text-indigo-200 text-xs mt-0.5">{label}</div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </motion.div>
-        </div>
-
-        {/* Wave divider */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-            <path d="M0 60L60 50C120 40 240 20 360 15C480 10 600 20 720 25C840 30 960 30 1080 25C1200 20 1320 10 1380 5L1440 0V60H1380C1320 60 1200 60 1080 60C960 60 840 60 720 60C600 60 480 60 360 60C240 60 120 60 60 60H0Z" fill="#f9fafb"/>
-          </svg>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Search & Filter */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mb-8"
-        >
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 size-4.5" />
-                <Input
-                  placeholder="Search workshops, instructors..."
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-gray-50 border-gray-200 focus:bg-white rounded-xl h-11 transition-all"
-                />
-              </div>
-              <div className="sm:w-56">
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="bg-gray-50 border-gray-200 rounded-xl h-11">
-                    <div className="flex items-center gap-2">
-                      <Filter className="size-4 text-gray-400" />
-                      <SelectValue placeholder="All Categories" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category === 'all' ? 'All Categories' : category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  Browse workshops
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                </a>
+              ) : (
+                <>
+                  <button
+                    onClick={() => navigate('/register')}
+                    className="press group flex items-center gap-2 rounded-lg bg-gray-900 px-5 py-3 text-sm font-medium text-white hover:bg-indigo-700"
+                  >
+                    Create free account
+                    <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                  </button>
+                  <Link to="/login" className="rounded-lg px-4 py-3 text-sm text-gray-600 transition-colors hover:text-gray-900">
+                    Sign in
+                  </Link>
+                </>
+              )}
             </div>
+          </motion.div>
 
-            {/* Category pills */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              {categories.map(category => (
+          {/* Next up */}
+          <motion.aside
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1, ease }}
+            className="min-w-0 self-end rounded-2xl bg-white p-2 ring-1 ring-gray-900/[0.06] shadow-[0_12px_32px_-16px_oklch(0.3_0.02_286/0.18)]"
+            aria-label="Next workshops with open seats"
+          >
+            <div className="flex items-center justify-between px-3 pb-2 pt-2">
+              <p className="text-sm font-medium text-gray-900">Next up</p>
+              <p className="font-mono text-xs text-gray-500 tabular">{stats.seats} seats open</p>
+            </div>
+            <ul className="space-y-1">
+              {loading &&
+                Array.from({ length: 3 }, (_, i) => (
+                  <li key={i} className="flex items-center gap-3 rounded-xl p-2">
+                    <div className="size-14 animate-pulse rounded-lg bg-gray-100" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 w-3/4 animate-pulse rounded bg-gray-100" />
+                      <div className="h-2.5 w-1/3 animate-pulse rounded bg-gray-100" />
+                    </div>
+                  </li>
+                ))}
+              {upcoming.map(w => (
+                <li key={w.id}>
+                  <Link
+                    to={`/workshop/${w.id}`}
+                    className="group flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-gray-50"
+                  >
+                    <WorkshopCover category={w.category} image={w.image} title={w.title} className="size-14 shrink-0 rounded-lg" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm text-gray-900">{w.title}</p>
+                      <p className="mt-0.5 font-mono text-xs text-gray-500 tabular">
+                        {new Date(w.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${w.price}
+                      </p>
+                    </div>
+                    <ArrowUpRight className="size-4 text-gray-400 transition-all group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-gray-900" />
+                  </Link>
+                </li>
+              ))}
+              {!loading && upcoming.length === 0 && (
+                <li className="px-3 py-6 text-sm text-gray-500">New sessions are being scheduled.</li>
+              )}
+            </ul>
+          </motion.aside>
+        </div>
+
+        {/* Stats */}
+        <dl className="mt-14 grid grid-cols-2 gap-y-6 border-t border-gray-200 pt-6 sm:grid-cols-4">
+          {[
+            { value: stats.total, label: 'Workshops' },
+            { value: stats.categories, label: 'Disciplines' },
+            { value: stats.open, label: 'Open for booking' },
+            { value: stats.seats, label: 'Seats available' },
+          ].map(({ value, label }) => (
+            <div key={label}>
+              <dt className="text-xs text-gray-500">{label}</dt>
+              <dd className="mt-1 font-mono text-2xl text-gray-900 tabular">
+                {loading ? <span className="inline-block h-6 w-10 animate-pulse rounded bg-gray-100 align-middle" /> : value}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
+      {/* Catalog */}
+      <section id="catalog" className="mx-auto max-w-7xl scroll-mt-20 px-4 pb-24 pt-12 sm:px-6 lg:px-8">
+        <div className="mb-8 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h2 className="text-3xl tracking-[-0.03em] text-gray-900 sm:text-4xl">The catalog</h2>
+            <p className="mt-2 max-w-[60ch] text-gray-500">
+              Every session is capped so instructors can actually review your work.
+            </p>
+          </div>
+
+          <div className="relative w-full lg:w-80">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-gray-400" />
+            <input
+              type="search"
+              placeholder="Search by title, instructor, topic"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              aria-label="Search workshops"
+              className="h-11 w-full rounded-lg border border-gray-200 bg-white pl-10 pr-10 text-sm text-gray-900 outline-none transition-[border-color,box-shadow] placeholder:text-gray-400 hover:border-gray-300 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 [&::-webkit-search-cancel-button]:hidden"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+              >
+                <X className="size-3.5" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Category filter */}
+        <div className="-mx-4 mb-8 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+          <div className="flex w-max gap-1 rounded-xl bg-gray-100 p-1 sm:w-auto sm:flex-wrap">
+            {categories.map(category => {
+              const active = categoryFilter === category;
+              return (
                 <button
                   key={category}
                   onClick={() => setCategoryFilter(category)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
-                    categoryFilter === category
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-200'
-                      : category === 'all'
-                      ? 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200'
-                      : `${CATEGORY_COLORS[category] || 'bg-gray-100 text-gray-600 border-gray-200'} hover:opacity-80`
+                  aria-pressed={active}
+                  className={`relative isolate whitespace-nowrap rounded-lg px-3.5 py-1.5 text-sm transition-colors ${
+                    active ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'
                   }`}
                 >
+                  {active && (
+                    <motion.span
+                      layoutId="cat-pill"
+                      className="absolute inset-0 -z-10 rounded-lg bg-white shadow-sm ring-1 ring-gray-900/[0.06]"
+                      transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
+                    />
+                  )}
                   {category === 'all' ? 'All' : category}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        </motion.div>
+        </div>
 
-        {/* Results header */}
-        <div className="flex items-center justify-between mb-6">
-          <motion.p
-            key={filteredWorkshops.length}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-gray-500 text-sm"
-          >
-            Showing{' '}
-            <span className="font-semibold text-gray-800">{filteredWorkshops.length}</span>{' '}
-            workshop{filteredWorkshops.length !== 1 ? 's' : ''}
-            {categoryFilter !== 'all' && (
-              <> in <span className="font-semibold text-indigo-600">{categoryFilter}</span></>
-            )}
-          </motion.p>
-          {(searchTerm || categoryFilter !== 'all') && (
-            <button
-              onClick={() => { setSearchTerm(''); setCategoryFilter('all'); }}
-              className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
-            >
-              Clear filters
+        <div className="mb-6 flex items-center justify-between text-sm">
+          <p className="text-gray-500">
+            <span className="font-mono text-gray-900 tabular">{filteredWorkshops.length}</span>{' '}
+            {filteredWorkshops.length === 1 ? 'workshop' : 'workshops'}
+            {categoryFilter !== 'all' && <> in {categoryFilter}</>}
+          </p>
+          {hasFilters && (
+            <button onClick={clearFilters} className="text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-gray-900">
+              Reset filters
             </button>
           )}
         </div>
 
-        {/* Workshop Grid */}
-        <AnimatePresence mode="wait">
-          {loading ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex justify-center items-center py-20"
+        {loading ? (
+            <div
+              className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
             >
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-            </motion.div>
+              {Array.from({ length: 6 }, (_, i) => (
+                <CardSkeleton key={i} />
+              ))}
+            </div>
           ) : filteredWorkshops.length > 0 ? (
             <motion.div
-              key="grid"
+              key={`grid-${categoryFilter}`}
               variants={containerVariants}
               initial="hidden"
               animate="visible"
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
             >
               {filteredWorkshops.map(workshop => (
                 <motion.div key={workshop.id} variants={cardVariants}>
@@ -312,25 +286,24 @@ export const Home = () => {
           ) : (
             <motion.div
               key="empty"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-20"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-dashed border-gray-300 px-6 py-20 text-center"
             >
-              <div className="inline-flex items-center justify-center size-20 bg-indigo-50 rounded-full mb-4">
-                <Search className="size-8 text-indigo-300" />
-              </div>
-              <h3 className="text-xl text-gray-700 mb-2">No workshops found</h3>
-              <p className="text-gray-500 mb-6">Try adjusting your search or filters</p>
+              <p className="font-display text-3xl text-gray-900">Nothing matches that.</p>
+              <p className="mx-auto mt-2 max-w-[44ch] text-gray-500">
+                {searchTerm ? <>No workshop mentions “{searchTerm}”. </> : null}
+                Try a broader term or look across every discipline.
+              </p>
               <button
-                onClick={() => { setSearchTerm(''); setCategoryFilter('all'); }}
-                className="px-5 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors text-sm font-medium"
+                onClick={clearFilters}
+                className="press mt-6 rounded-lg bg-gray-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700"
               >
-                Browse all workshops
+                Show all workshops
               </button>
             </motion.div>
           )}
-        </AnimatePresence>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };

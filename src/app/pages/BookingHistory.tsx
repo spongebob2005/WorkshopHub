@@ -135,15 +135,15 @@ export const BookingHistory = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full size-8 border-2 border-gray-200 border-t-gray-900"></div>
       </div>
     );
   }
 
   if (userBookings.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-[100dvh] bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -152,7 +152,7 @@ export const BookingHistory = () => {
             <h1 className="text-3xl text-gray-900 mb-2">My Bookings</h1>
             <p className="text-gray-500 mb-10">Manage and track your workshop registrations</p>
 
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-16 text-center">
+            <div className="bg-white rounded-3xl ring-1 ring-gray-900/[0.06] p-16 text-center">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -167,7 +167,7 @@ export const BookingHistory = () => {
               </p>
               <button
                 onClick={() => navigate('/')}
-                className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all shadow-lg shadow-indigo-200/50 font-medium"
+                className="px-8 py-3 bg-gray-900 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg font-medium"
               >
                 Browse Workshops
               </button>
@@ -179,7 +179,7 @@ export const BookingHistory = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-[100dvh] bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
         <motion.div
@@ -219,7 +219,7 @@ export const BookingHistory = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="flex items-center gap-2 bg-white rounded-2xl p-1.5 border border-gray-100 shadow-sm mb-6 w-fit"
+          className="flex items-center gap-2 bg-white rounded-2xl p-1.5 ring-1 ring-gray-900/[0.06] mb-6 w-fit"
         >
           {tabs.map(({ id, label, count }) => (
             <button
@@ -268,10 +268,10 @@ export const BookingHistory = () => {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ delay: index * 0.06 }}
-                    className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                    className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] overflow-hidden hover:shadow-md transition-shadow"
                   >
                     {/* Card header with status indicator */}
-                    <div className={`h-1 w-full ${isConfirmed ? 'bg-gradient-to-r from-indigo-500 to-purple-500' : 'bg-gray-200'}`} />
+                    <div className={`h-1 w-full ${isConfirmed ? 'bg-gray-900' : 'bg-gray-200'}`} />
 
                     <div className="p-5 sm:p-6">
                       <div className="flex items-start justify-between gap-4 mb-4">
@@ -295,7 +295,7 @@ export const BookingHistory = () => {
                         </div>
                         <div className="text-right flex-shrink-0">
                           <p className="text-xs text-gray-400">Amount</p>
-                          <p className={`text-xl font-bold ${isConfirmed ? 'text-indigo-600' : 'text-gray-400'}`}>
+                          <p className={`text-xl font-semibold ${isConfirmed ? 'text-indigo-600' : 'text-gray-400'}`}>
                             ${booking.amount}
                           </p>
                         </div>

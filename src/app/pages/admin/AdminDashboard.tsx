@@ -37,32 +37,32 @@ export const AdminDashboard = () => {
       value: stats.totalStudents, 
       icon: Users, 
       color: 'from-blue-500 to-cyan-500',
-      bgColor: 'bg-blue-50',
-      textColor: 'text-blue-600'
+      bgColor: 'bg-gray-100',
+      textColor: 'text-gray-900'
     },
     { 
       title: 'Total Workshops', 
       value: stats.totalWorkshops, 
       icon: GraduationCap, 
       color: 'from-purple-500 to-pink-500',
-      bgColor: 'bg-purple-50',
-      textColor: 'text-purple-600'
+      bgColor: 'bg-gray-100',
+      textColor: 'text-gray-900'
     },
     { 
       title: 'Total Bookings', 
       value: stats.totalBookings, 
       icon: BookOpen, 
       color: 'from-green-500 to-emerald-500',
-      bgColor: 'bg-green-50',
-      textColor: 'text-green-600'
+      bgColor: 'bg-gray-100',
+      textColor: 'text-gray-900'
     },
     { 
       title: 'Total Revenue', 
       value: `$${stats.totalRevenue.toLocaleString()}`, 
       icon: DollarSign, 
       color: 'from-amber-500 to-orange-500',
-      bgColor: 'bg-amber-50',
-      textColor: 'text-amber-600'
+      bgColor: 'bg-gray-100',
+      textColor: 'text-gray-900'
     },
   ] : [];
 
@@ -73,7 +73,7 @@ export const AdminDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-indigo-50 py-8 px-4">
+    <div className="min-h-[100dvh] bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <motion.div
@@ -82,12 +82,12 @@ export const AdminDashboard = () => {
           className="mb-8"
         >
           <div className="flex items-center gap-3 mb-2">
-            <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-3 rounded-2xl">
+            <div className="bg-gray-900 p-3 rounded-xl">
               <Activity className="size-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-              <p className="text-gray-600">Welcome back! Here's your workshop overview</p>
+              <h1 className="text-3xl tracking-[-0.03em] text-gray-900">Admin Dashboard</h1>
+              <p className="text-gray-600">Bookings, revenue and activity across every workshop.</p>
             </div>
           </div>
         </motion.div>
@@ -96,7 +96,7 @@ export const AdminDashboard = () => {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 animate-pulse">
+              <div key={i} className="bg-white rounded-2xl p-6 ring-1 ring-gray-900/[0.06] animate-pulse">
                 <div className="h-12 w-12 bg-gray-200 rounded-xl mb-4" />
                 <div className="h-4 bg-gray-200 rounded w-24 mb-2" />
                 <div className="h-8 bg-gray-200 rounded w-16" />
@@ -111,13 +111,13 @@ export const AdminDashboard = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-6 shadow-lg shadow-gray-200/50 hover:shadow-xl transition-all group"
+                className="bg-white rounded-2xl p-6 ring-1 ring-gray-900/[0.06] hover:shadow-xl transition-all group"
               >
                 <div className={`${stat.bgColor} p-3 rounded-xl inline-flex mb-4 group-hover:scale-110 transition-transform`}>
                   <stat.icon className={`size-6 ${stat.textColor}`} />
                 </div>
                 <h3 className="text-sm font-medium text-gray-600 mb-1">{stat.title}</h3>
-                <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                <p className="text-3xl font-mono tabular text-gray-900">{stat.value}</p>
               </motion.div>
             ))}
           </div>
@@ -128,9 +128,9 @@ export const AdminDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white rounded-2xl p-8 shadow-lg shadow-gray-200/50"
+          className="bg-white rounded-2xl p-8 ring-1 ring-gray-900/[0.06]"
         >
-          <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
             <TrendingUp className="size-5 text-purple-600" />
             Quick Actions
           </h2>
@@ -144,11 +144,11 @@ export const AdminDashboard = () => {
               >
                 <Link
                   to={link.path}
-                  className={`block p-6 rounded-xl border-2 border-${link.color}-100 hover:border-${link.color}-300 bg-gradient-to-br from-${link.color}-50 to-white hover:shadow-lg transition-all group`}
+                  className="group flex h-full flex-col rounded-xl bg-gray-50 p-6 ring-1 ring-gray-900/[0.06] transition-all hover:bg-white hover:shadow-[0_18px_40px_-18px_oklch(0.3_0.05_40/0.35)]"
                 >
-                  <link.icon className={`size-8 text-${link.color}-600 mb-3 group-hover:scale-110 transition-transform`} />
+                  <span className="mb-6 flex size-10 items-center justify-center rounded-lg bg-gray-900 text-white transition-colors group-hover:bg-indigo-700"><link.icon className="size-5" strokeWidth={1.75} /></span>
                   <h3 className="font-semibold text-gray-900">{link.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">Click to manage</p>
+                  <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">Open <span className="transition-transform group-hover:translate-x-0.5">→</span></p>
                 </Link>
               </motion.div>
             ))}
@@ -160,9 +160,9 @@ export const AdminDashboard = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="mt-8 bg-white rounded-2xl p-8 shadow-lg shadow-gray-200/50"
+          className="mt-8 bg-white rounded-2xl p-8 ring-1 ring-gray-900/[0.06]"
         >
-          <h2 className="text-xl font-bold text-gray-900 mb-4">System Status</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">System Status</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center gap-3 p-4 bg-green-50 rounded-xl">
               <div className="size-2 bg-green-500 rounded-full animate-pulse" />
