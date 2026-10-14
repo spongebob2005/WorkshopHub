@@ -13,7 +13,7 @@ import { Payment } from './pages/Payment';
 import { PaymentSuccess } from './pages/PaymentSuccess';
 import { BookingHistory } from './pages/BookingHistory';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
-import { AdminManagement } from './pages/admin/AdminManagement';
+import { ManageWorkshops } from './pages/admin/ManageWorkshops';
 import { ManageRegistrations } from './pages/admin/ManageRegistrations';
 import { ManageUsers } from './pages/admin/ManageUsers';
 
@@ -161,7 +161,7 @@ export const router = createBrowserRouter([
     element: (
       <AdminLayout>
         <AdminProtectedRoute>
-          <AdminManagement />
+          <ManageWorkshops />
         </AdminProtectedRoute>
       </AdminLayout>
     ),

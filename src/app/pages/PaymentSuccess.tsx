@@ -1,16 +1,21 @@
 import { useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useWorkshops } from '../contexts/WorkshopContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/ui/button';
-import { CheckCircle2, Download, Calendar, ArrowRight, Sparkles, Clock, DollarSign, Hash } from 'lucide-react';
+import { ArrowRight, Check, Download } from 'lucide-react';
 import { motion } from 'motion/react';
-import jsPDF from 'jspdf';
 import canvasConfetti from 'canvas-confetti';
+import { WorkshopCover } from '../components/WorkshopCover';
+import { PageLoader, PageMessage, btn } from '../components/PageState';
+import { downloadReceipt } from '../lib/receipt';
+
+const ease = [0.22, 1, 0.36, 1] as const;
+
+// Pine tints plus zinc, so the burst stays on-palette
+const CONFETTI = ['#0f6b4f', '#2f9e78', '#8fd8b9', '#d4f1e4', '#27272a'];
 
 export const PaymentSuccess = () => {
   const { bookingId } = useParams<{ bookingId: string }>();
-  const navigate = useNavigate();
   const { bookings, getWorkshopById, loading } = useWorkshops();
   const { user } = useAuth();
   const confettiFired = useRef(false);
@@ -19,261 +24,113 @@ export const PaymentSuccess = () => {
   const workshop = booking ? getWorkshopById(booking.workshopId) : null;
 
   useEffect(() => {
-    if (booking && !confettiFired.current) {
-      confettiFired.current = true;
-      // Fire confetti
-      const duration = 3000;
-      const end = Date.now() + duration;
-
-      const frame = () => {
-        canvasConfetti({
-          particleCount: 4,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: ['#6366f1', '#8b5cf6', '#a855f7', '#ec4899', '#f59e0b'],
-        });
-        canvasConfetti({
-          particleCount: 4,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: ['#6366f1', '#8b5cf6', '#a855f7', '#ec4899', '#f59e0b'],
-        });
-        if (Date.now() < end) requestAnimationFrame(frame);
-      };
-      frame();
-    }
+    if (!booking || confettiFired.current) return;
+    confettiFired.current = true;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    canvasConfetti({ particleCount: 90, spread: 70, startVelocity: 38, origin: { y: 0.35 }, colors: CONFETTI, disableForReducedMotion: true });
   }, [booking]);
 
-  const downloadReceipt = () => {
-    if (!booking || !workshop || !user) return;
-
-    const doc = new jsPDF();
-
-    // Gradient header simulation
-    doc.setFillColor(79, 70, 229);
-    doc.rect(0, 0, 210, 50, 'F');
-    doc.setFillColor(124, 58, 237);
-    doc.rect(105, 0, 105, 50, 'F');
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(26);
-    doc.text('WorkshopHub', 20, 22);
-    doc.setFontSize(12);
-    doc.text('Payment Receipt', 20, 36);
-
-    // Divider
-    doc.setDrawColor(229, 231, 235);
-    doc.setLineWidth(0.5);
-    doc.line(20, 60, 190, 60);
-
-    // Booking Details
-    doc.setTextColor(107, 114, 128);
-    doc.setFontSize(9);
-    doc.text('BOOKING INFORMATION', 20, 73);
-
-    doc.setTextColor(17, 24, 39);
-    doc.setFontSize(11);
-    doc.text(`Booking ID: ${booking.id}`, 20, 84);
-    doc.text(`Payment ID: ${booking.paymentId}`, 20, 94);
-    doc.text(`Booking Date: ${new Date(booking.bookingDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, 20, 104);
-
-    doc.line(20, 114, 190, 114);
-
-    // Customer Details
-    doc.setTextColor(107, 114, 128);
-    doc.setFontSize(9);
-    doc.text('CUSTOMER INFORMATION', 20, 126);
-
-    doc.setTextColor(17, 24, 39);
-    doc.setFontSize(11);
-    doc.text(`Name: ${user.name}`, 20, 137);
-    doc.text(`Email: ${user.email}`, 20, 147);
-
-    doc.line(20, 157, 190, 157);
-
-    // Workshop Details
-    doc.setTextColor(107, 114, 128);
-    doc.setFontSize(9);
-    doc.text('WORKSHOP DETAILS', 20, 169);
-
-    doc.setTextColor(17, 24, 39);
-    doc.setFontSize(11);
-    doc.text(`Title: ${workshop.title}`, 20, 180);
-    doc.text(`Instructor: ${workshop.instructor}`, 20, 190);
-    doc.text(`Category: ${workshop.category}`, 20, 200);
-    doc.text(`Date: ${new Date(workshop.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, 20, 210);
-    doc.text(`Time: ${workshop.time}`, 20, 220);
-    doc.text(`Duration: ${workshop.duration}`, 20, 230);
-
-    doc.line(20, 240, 190, 240);
-
-    // Payment Summary
-    doc.setTextColor(107, 114, 128);
-    doc.setFontSize(9);
-    doc.text('PAYMENT SUMMARY', 20, 252);
-
-    doc.setFillColor(238, 242, 255);
-    doc.roundedRect(20, 258, 170, 22, 3, 3, 'F');
-    doc.setTextColor(79, 70, 229);
-    doc.setFontSize(13);
-    doc.text(`Amount Paid: $${booking.amount}`, 28, 272);
-    doc.setTextColor(22, 163, 74);
-    doc.text(`Status: ${booking.status.toUpperCase()}`, 130, 272);
-
-    // Footer
-    doc.setFillColor(249, 250, 251);
-    doc.rect(0, 283, 210, 14, 'F');
-    doc.setFontSize(9);
-    doc.setTextColor(156, 163, 175);
-    doc.text('Thank you for choosing WorkshopHub! • workshophub.com', 20, 291);
-    doc.text('This is a computer-generated receipt.', 150, 291);
-
-    doc.save(`receipt-${booking.id}.pdf`);
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full size-8 border-2 border-gray-200 border-t-gray-900"></div>
-      </div>
-    );
-  }
+  if (loading) return <PageLoader />;
 
   if (!booking || !workshop) {
     return (
-      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl mb-4">Booking not found</h2>
-          <Button onClick={() => navigate('/')}>Back to Workshops</Button>
-        </div>
-      </div>
+      <PageMessage
+        eyebrow="Booking not found"
+        title="We couldn't find that booking."
+        body="If you just paid, it may still be saving. Your confirmed bookings are always listed under My bookings."
+        actions={
+          <>
+            <Link to="/bookings" className={btn.primary}>
+              My bookings
+            </Link>
+            <Link to="/" className={btn.ghost}>
+              Browse workshops
+            </Link>
+          </>
+        }
+      />
     );
   }
 
+  const workshopDate = new Date(workshop.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+
   return (
-    <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-xl">
-        {/* Success card */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="bg-white rounded-3xl shadow-2xl border border-white overflow-hidden"
+    <main className="mx-auto max-w-2xl px-4 pb-24 pt-12 sm:px-6 md:pt-20">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}>
+        <motion.span
+          initial={{ scale: 0.6, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 260, damping: 18, delay: 0.1 }}
+          className="flex size-11 items-center justify-center rounded-xl bg-indigo-600 text-white"
         >
-          {/* Top banner */}
-          <div className="bg-gray-900 p-8 text-center relative overflow-hidden">
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              {[...Array(6)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: [0, 1, 0], scale: [0, 1, 0], y: [-20, -60] }}
-                  transition={{ delay: 0.3 + i * 0.15, duration: 1.5 }}
-                  className="absolute"
-                  style={{ left: `${15 + i * 14}%`, bottom: '20%' }}
-                >
-                  <Sparkles className="size-5 text-white/40" />
-                </motion.div>
-              ))}
-            </div>
+          <Check className="size-5" strokeWidth={2.5} />
+        </motion.span>
+        <p className="eyebrow mt-6 text-indigo-700">Booking confirmed</p>
+        <h1 className="mt-3 text-4xl tracking-[-0.035em] text-gray-900 sm:text-5xl">You're in.</h1>
+        <p className="mt-4 max-w-[48ch] text-gray-500">
+          Your seat for <span className="text-gray-900">{workshop.title}</span> is reserved. The materials and quizzes are unlocked on the workshop page.
+        </p>
+      </motion.div>
 
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.2 }}
-              className="relative inline-flex items-center justify-center size-20 bg-white/20 rounded-full mb-4"
-            >
-              <CheckCircle2 className="size-12 text-white" />
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <h1 className="text-3xl text-white mb-1">Payment received</h1>
-              <p className="text-indigo-200">Your workshop registration is confirmed</p>
-            </motion.div>
+      {/* Ticket */}
+      <motion.section
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.15, ease }}
+        className="mt-10 overflow-hidden rounded-2xl bg-white ring-1 ring-gray-900/[0.06] shadow-[0_12px_32px_-16px_oklch(0.3_0.02_286/0.18)]"
+        aria-label="Booking details"
+      >
+        <div className="flex items-center gap-4 p-4">
+          <WorkshopCover category={workshop.category} image={workshop.image} title={workshop.title} className="size-16 shrink-0 rounded-lg" />
+          <div className="min-w-0">
+            <p className="truncate text-gray-900">{workshop.title}</p>
+            <p className="mt-0.5 text-sm text-gray-500">with {workshop.instructor}</p>
           </div>
+        </div>
 
-          {/* Workshop info */}
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="text-lg text-gray-900 mb-1">{workshop.title}</h2>
-            <p className="text-sm text-gray-500">by {workshop.instructor}</p>
+        <dl className="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-dashed border-gray-200 p-5 text-sm sm:grid-cols-3">
+          <div className="col-span-2 sm:col-span-1">
+            <dt className="text-xs text-gray-500">When</dt>
+            <dd className="mt-1 text-gray-900">{workshopDate}</dd>
           </div>
+          <div>
+            <dt className="text-xs text-gray-500">Starts</dt>
+            <dd className="mt-1 text-gray-900">{workshop.time}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-gray-500">Paid</dt>
+            <dd className="mt-1 font-mono text-gray-900 tabular">${booking.amount}</dd>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
+            <dt className="text-xs text-gray-500">Booking ID</dt>
+            <dd className="mt-1 truncate font-mono text-xs text-gray-700">{booking.id}</dd>
+          </div>
+          <div className="col-span-2">
+            <dt className="text-xs text-gray-500">Payment ID</dt>
+            <dd className="mt-1 truncate font-mono text-xs text-gray-700">{booking.paymentId}</dd>
+          </div>
+        </dl>
 
-          {/* Booking details grid */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="p-6"
-          >
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              {[
-                { icon: Hash, label: 'Booking ID', value: booking.id, mono: true },
-                { icon: Hash, label: 'Payment ID', value: booking.paymentId, mono: true },
-                {
-                  icon: Calendar, label: 'Workshop Date',
-                  value: new Date(workshop.date).toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' })
-                },
-                { icon: Clock, label: 'Time', value: workshop.time },
-                {
-                  icon: DollarSign, label: 'Amount Paid',
-                  value: `$${booking.amount}`, highlight: true
-                },
-                {
-                  icon: CheckCircle2, label: 'Status',
-                  value: booking.status.toUpperCase(), success: true
-                },
-              ].map(({ icon: Icon, label, value, mono, highlight, success }) => (
-                <div key={label} className="bg-gray-50 rounded-xl p-3">
-                  <div className="flex items-center gap-1.5 text-gray-400 mb-1">
-                    <Icon className="size-3.5" />
-                    <p className="text-xs">{label}</p>
-                  </div>
-                  <p className={`text-sm font-medium truncate ${
-                    highlight ? 'text-indigo-600' :
-                    success ? 'text-green-600' :
-                    mono ? 'font-mono text-xs text-gray-600' :
-                    'text-gray-800'
-                  }`}>
-                    {value}
-                  </p>
-                </div>
-              ))}
-            </div>
+        <div className="flex flex-col gap-2 border-t border-gray-100 bg-gray-50/60 p-4 sm:flex-row">
+          <Link to={`/workshop/${workshop.id}`} className={`${btn.primary} group flex-1`}>
+            Go to workshop
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+          <button onClick={() => user && downloadReceipt(booking, workshop, user)} className={`${btn.secondary} flex-1`}>
+            <Download className="size-4" />
+            Receipt (PDF)
+          </button>
+        </div>
+      </motion.section>
 
-            {/* Action buttons */}
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={downloadReceipt}
-                className="flex-1 flex items-center justify-center gap-2 py-3 border-2 border-indigo-200 text-indigo-600 rounded-xl hover:bg-indigo-50 transition-colors text-sm font-medium"
-              >
-                <Download className="size-4" />
-                Download Receipt
-              </button>
-              <button
-                onClick={() => navigate('/bookings')}
-                className="flex-1 flex items-center justify-center gap-2 py-3 bg-gray-900 text-white rounded-xl hover:bg-indigo-700 transition-all text-sm font-medium shadow-md"
-              >
-                <Calendar className="size-4" />
-                My Bookings
-              </button>
-            </div>
-
-            <button
-              onClick={() => navigate('/')}
-              className="w-full flex items-center justify-center gap-1.5 mt-3 text-sm text-gray-400 hover:text-indigo-600 transition-colors py-1.5"
-            >
-              Browse more workshops
-              <ArrowRight className="size-3.5" />
-            </button>
-          </motion.div>
-        </motion.div>
+      <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <Link to="/bookings" className="text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-gray-900">
+          View all my bookings
+        </Link>
+        <Link to="/" className="text-gray-500 underline decoration-gray-300 underline-offset-4 hover:text-gray-900">
+          Keep browsing
+        </Link>
       </div>
-    </div>
+    </main>
   );
 };

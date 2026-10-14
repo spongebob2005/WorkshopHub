@@ -32,6 +32,9 @@ export interface Booking {
   paymentId: string;
   status: 'confirmed' | 'cancelled';
   amount: number;
+  userName?: string;
+  userEmail?: string;
+  workshopTitle?: string;
 }
 
 interface WorkshopContextType {
@@ -47,6 +50,20 @@ interface WorkshopContextType {
 }
 
 const WorkshopContext = createContext<WorkshopContextType | undefined>(undefined);
+
+// Workshops created through older admin forms can be missing these fields
+const normalizeWorkshop = (w: Workshop): Workshop => ({
+  ...w,
+  totalSeats: w.totalSeats ?? 0,
+  availableSeats: w.availableSeats ?? w.totalSeats ?? 0,
+  skills: w.skills ?? [],
+  description: w.description ?? '',
+  learningContent: {
+    pdfs: w.learningContent?.pdfs ?? [],
+    videos: w.learningContent?.videos ?? [],
+    mcqs: w.learningContent?.mcqs ?? [],
+  },
+});
 
 const INITIAL_WORKSHOPS: Workshop[] = [
   {
@@ -303,7 +320,7 @@ export const WorkshopProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // Fetch workshops
         const fetchedWorkshops = await api.get('/workshops');
         if (fetchedWorkshops && fetchedWorkshops.length > 0) {
-          setWorkshops(fetchedWorkshops);
+          setWorkshops(fetchedWorkshops.map(normalizeWorkshop));
         } else {
           // Initialize if empty
           await api.post('/workshops/init', { workshops: INITIAL_WORKSHOPS });

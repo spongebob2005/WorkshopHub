@@ -1,17 +1,32 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useWorkshops } from '../contexts/WorkshopContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Button } from '../components/ui/button';
-import { Separator } from '../components/ui/separator';
-import {
-  CreditCard, Lock, ArrowLeft, Calendar, Clock, Shield,
-  ChevronRight, Wifi
-} from 'lucide-react';
+import { ArrowLeft, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
+import { WorkshopCover } from '../components/WorkshopCover';
+import { FormError, Spinner } from '../components/AuthShell';
+import { PageLoader, PageMessage, btn } from '../components/PageState';
+
+const ease = [0.22, 1, 0.36, 1] as const;
+
+const inputClass =
+  'h-11 w-full rounded-lg border border-gray-200 bg-white px-3.5 text-sm text-gray-900 outline-none transition-[border-color,box-shadow] placeholder:text-gray-400 hover:border-gray-300 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 disabled:bg-gray-50 disabled:text-gray-500';
+
+const formatCardNumber = (value: string) =>
+  value
+    .replace(/\D/g, '')
+    .slice(0, 16)
+    .replace(/(\d{4})(?=\d)/g, '$1 ');
+
+const cardBrand = (number: string) => {
+  const n = number.replace(/\s/g, '');
+  if (n.startsWith('4')) return 'VISA';
+  if (/^5[1-5]/.test(n)) return 'Mastercard';
+  if (/^3[47]/.test(n)) return 'Amex';
+  return null;
+};
 
 export const Payment = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,45 +42,46 @@ export const Payment = () => {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [cardFlipped, setCardFlipped] = useState(false);
-  const [activeField, setActiveField] = useState('');
 
-  if (workshopsLoading) {
-    return (
-      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full size-8 border-2 border-gray-200 border-t-gray-900"></div>
-      </div>
-    );
-  }
+  if (workshopsLoading) return <PageLoader />;
 
   if (!workshop) {
     return (
-      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl mb-4">Workshop not found</h2>
-          <Button onClick={() => navigate('/')}>Back to Workshops</Button>
-        </div>
-      </div>
+      <PageMessage
+        eyebrow="Checkout"
+        title="There's nothing to pay for here."
+        body="The workshop in this link no longer exists. Pick another session from the catalog."
+        actions={
+          <Link to="/" className={btn.primary}>
+            Browse workshops
+          </Link>
+        }
+      />
     );
   }
 
-  const handlePayment = async (e: React.FormEvent) => {
+  const handlePayment = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (!cardNumber || !cardName || !expiryDate || !cvv) {
-      setError('Please fill in all payment details');
+      setError('Fill in every card field to continue.');
       return;
     }
     if (cardNumber.replace(/\s/g, '').length !== 16) {
-      setError('Please enter a valid 16-digit card number');
+      setError('Card number should be 16 digits.');
+      return;
+    }
+    const month = Number(expiryDate.slice(0, 2));
+    if (expiryDate.length !== 5 || month < 1 || month > 12) {
+      setError('Expiry should look like MM/YY.');
       return;
     }
     if (cvv.length !== 3) {
-      setError('CVV must be 3 digits');
+      setError('CVV is the 3 digits on the back of the card.');
       return;
     }
     setProcessing(true);
     setTimeout(async () => {
-      const paymentId = `PAY-${Date.now()}`;
       const booking = {
         id: `BKG-${Date.now()}`,
         userId: user!.id,
@@ -76,335 +92,221 @@ export const Payment = () => {
         date: workshop.date,
         price: workshop.price,
         bookingDate: new Date().toISOString(),
-        paymentId,
+        paymentId: `PAY-${Date.now()}`,
         paymentMethod: 'Credit Card',
         status: 'confirmed' as const,
         amount: workshop.price,
       };
-      
+
       try {
         await addBooking(booking);
         await updateSeatAvailability(workshop.id, 1);
         navigate(`/payment-success/${booking.id}`);
-      } catch (e) {
-        console.error("Failed booking process", e);
-        toast.error("Failed to process booking. Please try again.");
+      } catch (err) {
+        console.error('Failed booking process', err);
+        toast.error("Payment went through but the booking didn't save. Try again.");
         setProcessing(false);
       }
-    }, 2500);
+    }, 1800);
   };
 
-  const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const parts = [];
-    for (let i = 0, len = v.length; i < len; i += 4) {
-      parts.push(v.substring(i, i + 4));
-    }
-    return parts.length ? parts.join(' ') : value;
-  };
-
-  const maskedNumber = cardNumber
-    ? cardNumber.padEnd(19, ' ').split(' ').join(' ')
-    : '•••• •••• •••• ••••';
-
-  const getCardBrand = () => {
-    const n = cardNumber.replace(/\s/g, '');
-    if (n.startsWith('4')) return 'VISA';
-    if (n.startsWith('5')) return 'MC';
-    if (n.startsWith('3')) return 'CAT';
-    return null;
-  };
-
-  const cardBrand = getCardBrand();
+  const brand = cardBrand(cardNumber);
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
+    <main className="mx-auto max-w-6xl px-4 pb-24 pt-8 sm:px-6 lg:px-8">
+      <Link to={`/workshop/${id}`} className="inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-gray-900">
+        <ArrowLeft className="size-4" />
+        Back to workshop
+      </Link>
+
+      <motion.header initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }} className="mt-6">
+        <p className="eyebrow text-indigo-700">Checkout</p>
+        <h1 className="mt-3 text-3xl tracking-[-0.03em] text-gray-900 sm:text-4xl">Book your seat</h1>
+      </motion.header>
+
+      <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-[1fr_22rem]">
+        {/* Card + form */}
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-4 mb-8"
+          transition={{ duration: 0.5, delay: 0.05, ease }}
+          className="grid grid-cols-1 gap-8 md:grid-cols-[17rem_1fr] md:items-start"
+          aria-label="Payment details"
         >
-          <button
-            onClick={() => navigate(`/workshop/${id}`)}
-            className="flex items-center gap-2 text-gray-500 hover:text-indigo-600 transition-colors text-sm"
-          >
-            <ArrowLeft className="size-4" />
-            Back to Workshop
-          </button>
-          <ChevronRight className="size-4 text-gray-300" />
-          <span className="text-sm text-gray-700 font-medium">Secure Payment</span>
-        </motion.div>
-
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left: Card Visual + Form */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            {/* Credit Card Visual */}
-            <div className="mb-8" style={{ perspective: '1000px' }}>
-              <motion.div
-                animate={{ rotateY: cardFlipped ? 180 : 0 }}
-                transition={{ duration: 0.5 }}
-                style={{ transformStyle: 'preserve-3d', position: 'relative', height: '200px' }}
-              >
-                {/* Front */}
-                <div
-                  className="absolute inset-0 rounded-2xl overflow-hidden"
-                  style={{ backfaceVisibility: 'hidden' }}
-                >
-                  <div className="absolute inset-0 bg-gray-900" />
-                  <div
-                    className="absolute inset-0 opacity-20"
-                    style={{
-                      backgroundImage: 'radial-gradient(circle at 80% 20%, white 1px, transparent 1px), radial-gradient(circle at 20% 80%, white 1px, transparent 1px)',
-                      backgroundSize: '30px 30px',
-                    }}
-                  />
-                  <div className="absolute inset-0 p-6 flex flex-col justify-between text-white">
-                    <div className="flex items-center justify-between">
-                      <div className="bg-white/20 backdrop-blur-sm rounded-lg p-1.5">
-                        <Wifi className="size-5 text-white rotate-90" />
-                      </div>
-                      {cardBrand ? (
-                        <span className="text-white font-semibold text-lg tracking-widest">{cardBrand}</span>
-                      ) : (
-                        <CreditCard className="size-8 text-white/60" />
-                      )}
+          {/* Card preview */}
+          <div className="mx-auto w-full max-w-[20rem] md:sticky md:top-24" style={{ perspective: '1000px' }} aria-hidden>
+            <motion.div
+              animate={{ rotateY: cardFlipped ? 180 : 0 }}
+              transition={{ duration: 0.5, ease }}
+              style={{ transformStyle: 'preserve-3d' }}
+              className="relative aspect-[1.586] w-full"
+            >
+              <div className="absolute inset-0 flex flex-col justify-between rounded-2xl bg-gray-900 p-5 text-white shadow-[0_20px_40px_-20px_oklch(0.2_0.01_286/0.6)]" style={{ backfaceVisibility: 'hidden' }}>
+                <div className="flex items-center justify-between">
+                  <span className="h-7 w-9 rounded-md bg-gradient-to-br from-indigo-200 to-indigo-400 opacity-80" />
+                  <span className="text-xs font-semibold tracking-widest text-white/80">{brand ?? ''}</span>
+                </div>
+                <div>
+                  <p className="font-mono text-[0.95rem] tracking-[0.12em] text-white/90 tabular">{cardNumber || '•••• •••• •••• ••••'}</p>
+                  <div className="mt-3 flex items-end justify-between gap-4 text-xs">
+                    <div className="min-w-0">
+                      <p className="text-white/40">Card holder</p>
+                      <p className="mt-0.5 truncate uppercase tracking-wide">{cardName || 'Your name'}</p>
                     </div>
-                    <div>
-                      <div className="text-lg tracking-widest font-mono mb-3 text-white/90">
-                        {activeField === 'cardNumber' || cardNumber
-                          ? cardNumber || '•••• •••• •••• ••••'
-                          : '•••• •••• •••• ••••'}
-                      </div>
-                      <div className="flex items-end justify-between">
-                        <div>
-                          <p className="text-white/50 text-xs uppercase tracking-wider mb-0.5">Card Holder</p>
-                          <p className="text-sm font-medium tracking-wide uppercase">
-                            {cardName || 'YOUR NAME'}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-white/50 text-xs uppercase tracking-wider mb-0.5">Expires</p>
-                          <p className="text-sm font-medium">
-                            {expiryDate || 'MM/YY'}
-                          </p>
-                        </div>
-                      </div>
+                    <div className="shrink-0 text-right">
+                      <p className="text-white/40">Expires</p>
+                      <p className="mt-0.5 font-mono tabular">{expiryDate || 'MM/YY'}</p>
                     </div>
                   </div>
-                </div>
-
-                {/* Back */}
-                <div
-                  className="absolute inset-0 rounded-2xl overflow-hidden"
-                  style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-                >
-                  <div className="absolute inset-0 bg-gray-900" />
-                  <div className="absolute top-8 left-0 right-0 h-12 bg-black/40" />
-                  <div className="absolute top-28 left-6 right-6">
-                    <div className="bg-white/10 rounded-lg p-3 flex items-center justify-end">
-                      <div className="bg-white rounded px-3 py-1">
-                        <p className="text-gray-700 text-sm font-mono tracking-wider">
-                          {cvv || '•••'}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="text-white/60 text-xs text-right mt-1">CVV</p>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-
-            {/* Form */}
-            <div className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] p-6">
-              <div className="flex items-center gap-2 mb-5">
-                <div className="bg-indigo-50 rounded-xl p-2">
-                  <CreditCard className="size-4.5 text-indigo-600" />
-                </div>
-                <h2 className="text-base font-semibold text-gray-800">Card Details</h2>
-                <div className="ml-auto flex items-center gap-1.5 bg-green-50 border border-green-200 rounded-lg px-2.5 py-1">
-                  <Shield className="size-3 text-green-600" />
-                  <span className="text-xs text-green-700 font-medium">Secure</span>
                 </div>
               </div>
-
-              <AnimatePresence>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-4 text-sm"
-                  >
-                    <span className="size-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                    {error}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <form onSubmit={handlePayment} className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="cardName" className="text-gray-600 text-xs uppercase tracking-wide">Cardholder Name</Label>
-                  <Input
-                    id="cardName"
-                    placeholder="John Doe"
-                    value={cardName}
-                    onChange={e => setCardName(e.target.value)}
-                    onFocus={() => { setActiveField('cardName'); setCardFlipped(false); }}
-                    disabled={processing}
-                    className="h-11 rounded-xl bg-gray-50 border-gray-200 focus:bg-white uppercase"
-                  />
+              <div className="absolute inset-0 rounded-2xl bg-gray-900 pt-6" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                <div className="h-10 bg-gray-950" />
+                <div className="mx-5 mt-5 flex items-center justify-end rounded bg-white/10 p-2">
+                  <span className="rounded bg-white px-2.5 py-0.5 font-mono text-sm text-gray-800 tabular">{cvv ? '•'.repeat(cvv.length) : 'CVV'}</span>
                 </div>
+              </div>
+            </motion.div>
+          </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="cardNumber" className="text-gray-600 text-xs uppercase tracking-wide">Card Number</Label>
-                  <Input
-                    id="cardNumber"
-                    placeholder="1234 5678 9012 3456"
-                    value={cardNumber}
-                    onChange={e => setCardNumber(formatCardNumber(e.target.value))}
-                    onFocus={() => { setActiveField('cardNumber'); setCardFlipped(false); }}
-                    maxLength={19}
-                    disabled={processing}
-                    className="h-11 rounded-xl bg-gray-50 border-gray-200 focus:bg-white font-mono tracking-wider"
-                  />
-                </div>
+          <form onSubmit={handlePayment} noValidate className="space-y-5">
+            <AnimatePresence>{error && <FormError message={error} />}</AnimatePresence>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="expiry" className="text-gray-600 text-xs uppercase tracking-wide">Expiry Date</Label>
-                    <Input
-                      id="expiry"
-                      placeholder="MM/YY"
-                      value={expiryDate}
-                      onChange={e => {
-                        let value = e.target.value.replace(/\D/g, '');
-                        if (value.length >= 2) value = value.slice(0, 2) + '/' + value.slice(2, 4);
-                        setExpiryDate(value);
-                      }}
-                      onFocus={() => { setActiveField('expiry'); setCardFlipped(false); }}
-                      maxLength={5}
-                      disabled={processing}
-                      className="h-11 rounded-xl bg-gray-50 border-gray-200 focus:bg-white"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="cvv" className="text-gray-600 text-xs uppercase tracking-wide">CVV</Label>
-                    <Input
-                      id="cvv"
-                      placeholder="•••"
-                      value={cvv}
-                      onChange={e => setCvv(e.target.value.replace(/\D/g, ''))}
-                      onFocus={() => { setActiveField('cvv'); setCardFlipped(true); }}
-                      onBlur={() => setCardFlipped(false)}
-                      maxLength={3}
-                      type="password"
-                      disabled={processing}
-                      className="h-11 rounded-xl bg-gray-50 border-gray-200 focus:bg-white"
-                    />
-                  </div>
-                </div>
+            <div>
+              <label htmlFor="cardName" className="mb-1.5 block text-gray-700">Name on card</label>
+              <input
+                id="cardName"
+                autoComplete="cc-name"
+                placeholder="As printed on the card"
+                value={cardName}
+                onChange={e => setCardName(e.target.value)}
+                onFocus={() => setCardFlipped(false)}
+                disabled={processing}
+                className={inputClass}
+              />
+            </div>
 
-                <Button
-                  type="submit"
-                  className="w-full h-12 bg-gray-900 hover:bg-indigo-700 rounded-xl border-0 shadow-lg text-base mt-2 transition-all"
+            <div>
+              <label htmlFor="cardNumber" className="mb-1.5 block text-gray-700">Card number</label>
+              <input
+                id="cardNumber"
+                inputMode="numeric"
+                autoComplete="cc-number"
+                placeholder="1234 5678 9012 3456"
+                value={cardNumber}
+                onChange={e => setCardNumber(formatCardNumber(e.target.value))}
+                onFocus={() => setCardFlipped(false)}
+                maxLength={19}
+                disabled={processing}
+                className={`${inputClass} font-mono tabular`}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="expiry" className="mb-1.5 block text-gray-700">Expiry</label>
+                <input
+                  id="expiry"
+                  inputMode="numeric"
+                  autoComplete="cc-exp"
+                  placeholder="MM/YY"
+                  value={expiryDate}
+                  onChange={e => {
+                    let value = e.target.value.replace(/\D/g, '');
+                    if (value.length >= 3) value = `${value.slice(0, 2)}/${value.slice(2, 4)}`;
+                    setExpiryDate(value);
+                  }}
+                  onFocus={() => setCardFlipped(false)}
+                  maxLength={5}
                   disabled={processing}
-                >
-                  {processing ? (
-                    <span className="flex items-center gap-2">
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                        className="size-4 border-2 border-white/30 border-t-white rounded-full"
-                      />
-                      Processing Payment...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      <Lock className="size-4" />
-                      Pay ${workshop.price} Securely
-                    </span>
-                  )}
-                </Button>
-
-                <p className="text-center text-xs text-gray-400">
-                  Simulated payment. No real transaction occurs.
-                </p>
-              </form>
-            </div>
-          </motion.div>
-
-          {/* Right: Order Summary */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <div className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] overflow-hidden sticky top-24">
-              <div className="bg-gray-900 p-5">
-                <p className="text-white/70 text-xs uppercase tracking-wide mb-1">Order Summary</p>
-                <h2 className="text-xl text-white">{workshop.title}</h2>
-                <p className="text-indigo-200 text-sm mt-1">by {workshop.instructor}</p>
+                  className={`${inputClass} font-mono tabular`}
+                />
               </div>
-
-              <div className="p-5 space-y-4">
-                <div className="space-y-3">
-                  {[
-                    { icon: Calendar, label: 'Date', value: new Date(workshop.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) },
-                    { icon: Clock, label: 'Time', value: workshop.time },
-                    { icon: Clock, label: 'Duration', value: workshop.duration },
-                  ].map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-gray-500 text-sm">
-                        <Icon className="size-4" />
-                        {label}
-                      </div>
-                      <span className="text-sm font-medium text-gray-800">{value}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <Separator />
-
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Workshop Price</span>
-                    <span className="font-medium">${workshop.price}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Processing Fee</span>
-                    <span className="text-green-600 font-medium">Free</span>
-                  </div>
-                </div>
-
-                <div className="bg-indigo-50 rounded-xl p-4 flex justify-between items-center">
-                  <span className="text-indigo-900 font-semibold">Total</span>
-                  <span className="text-2xl text-indigo-700 font-semibold">${workshop.price}</span>
-                </div>
-
-                {/* Trust badges */}
-                <div className="grid grid-cols-3 gap-2 pt-2">
-                  {[
-                    { icon: Shield, label: 'Secure' },
-                    { icon: Lock, label: 'Encrypted' },
-                    { icon: CreditCard, label: 'Safe Pay' },
-                  ].map(({ icon: Icon, label }) => (
-                    <div key={label} className="flex flex-col items-center gap-1 bg-gray-50 rounded-xl py-2.5">
-                      <Icon className="size-4 text-indigo-400" />
-                      <span className="text-xs text-gray-500">{label}</span>
-                    </div>
-                  ))}
-                </div>
+              <div>
+                <label htmlFor="cvv" className="mb-1.5 block text-gray-700">CVV</label>
+                <input
+                  id="cvv"
+                  type="password"
+                  inputMode="numeric"
+                  autoComplete="cc-csc"
+                  placeholder="•••"
+                  value={cvv}
+                  onChange={e => setCvv(e.target.value.replace(/\D/g, ''))}
+                  onFocus={() => setCardFlipped(true)}
+                  onBlur={() => setCardFlipped(false)}
+                  maxLength={3}
+                  disabled={processing}
+                  className={`${inputClass} font-mono tabular`}
+                />
               </div>
             </div>
-          </motion.div>
-        </div>
+
+            <button type="submit" disabled={processing} className={`${btn.primary} w-full py-3`}>
+              {processing ? (
+                <>
+                  <Spinner />
+                  Processing
+                </>
+              ) : (
+                <>
+                  <Lock className="size-4" />
+                  Pay <span className="font-mono tabular">${workshop.price}</span>
+                </>
+              )}
+            </button>
+
+            <p className="text-xs text-gray-500">
+              This is a demo checkout. Any 16-digit number works and nothing is charged.
+            </p>
+          </form>
+        </motion.section>
+
+        {/* Order summary */}
+        <motion.aside
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.12, ease }}
+          className="lg:sticky lg:top-24 lg:self-start"
+          aria-label="Order summary"
+        >
+          <div className="rounded-2xl bg-white p-2 ring-1 ring-gray-900/[0.06]">
+            <WorkshopCover category={workshop.category} image={workshop.image} title={workshop.title} className="aspect-[16/9] rounded-xl" />
+            <div className="p-3 pt-4">
+              <p className="text-xs text-gray-500">{workshop.category}</p>
+              <h2 className="mt-1 text-base leading-snug text-gray-900">{workshop.title}</h2>
+              <p className="mt-1 text-sm text-gray-500">with {workshop.instructor}</p>
+
+              <dl className="mt-5 space-y-2.5 border-t border-gray-100 pt-4 text-sm">
+                {[
+                  ['Date', new Date(workshop.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })],
+                  ['Starts', workshop.time],
+                  ['Duration', workshop.duration],
+                ].map(([label, value]) => (
+                  <div key={label} className="flex justify-between gap-4">
+                    <dt className="text-gray-500">{label}</dt>
+                    <dd className="text-right text-gray-900">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <dl className="mt-4 space-y-2.5 border-t border-gray-100 pt-4 text-sm">
+                <div className="flex justify-between">
+                  <dt className="text-gray-500">1 seat</dt>
+                  <dd className="font-mono text-gray-900 tabular">${workshop.price}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-gray-500">Fees</dt>
+                  <dd className="font-mono text-gray-900 tabular">$0.00</dd>
+                </div>
+                <div className="flex items-baseline justify-between border-t border-gray-100 pt-3">
+                  <dt className="text-gray-900">Total</dt>
+                  <dd className="font-mono text-xl text-gray-900 tabular">${workshop.price}</dd>
+                </div>
+              </dl>
+            </div>
+          </div>
+        </motion.aside>
       </div>
-    </div>
+    </main>
   );
 };

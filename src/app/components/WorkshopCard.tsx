@@ -8,7 +8,7 @@ interface WorkshopCardProps {
   workshop: Workshop;
 }
 
-const seatStatus = (available: number, total: number) => {
+export const seatStatus = (available: number, total: number) => {
   const left = total > 0 ? available / total : 0;
   if (available === 0) return { label: 'Sold out', dot: 'bg-gray-400', bar: 'bg-gray-400' };
   if (left <= 0.2) return { label: `Only ${available} left`, dot: 'bg-red-500', bar: 'bg-red-500' };

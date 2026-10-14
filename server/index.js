@@ -10,8 +10,6 @@ import { createServer } from "net";
 
 dotenv.config();
 
-dotenv.config();
-
 const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.MONGODB_DB ?? "workshophub";
 const PORT = Number(process.env.PORT || 4000);
@@ -130,9 +128,12 @@ const adjustWorkshopSeats = async (workshopId, delta) => {
   }
 };
 
+// Clients echo back Mongo's _id as a string; $set-ing it would try to change the immutable field.
+const withoutMongoId = ({ _id, ...rest }) => rest;
+
 const upsertDocument = async (collectionName, query, value) => {
   const collection = await getCollection(collectionName);
-  await collection.updateOne(query, { $set: value }, { upsert: true });
+  await collection.updateOne(query, { $set: withoutMongoId(value) }, { upsert: true });
 };
 
 const appLogger = (req, res, next) => {
@@ -287,7 +288,7 @@ app.put("/api/users/:email", authenticateToken, requireAdmin, async (req, res) =
     if (!existingUser) {
       return res.status(404).json({ error: "User not found" });
     }
-    const updatedUser = { ...existingUser, ...updates };
+    const updatedUser = withoutMongoId({ ...existingUser, ...updates, email });
     if (updates.password) {
       updatedUser.password = await bcrypt.hash(updates.password, 10);
     }
@@ -345,7 +346,7 @@ app.put("/api/workshops/:id", authenticateToken, requireAdmin, async (req, res) 
     if (!existingWorkshop) {
       return res.status(404).json({ error: "Workshop not found" });
     }
-    const updatedWorkshop = { ...existingWorkshop, ...updates };
+    const updatedWorkshop = withoutMongoId({ ...existingWorkshop, ...updates, id });
     await workshops.updateOne({ id }, { $set: updatedWorkshop });
     res.json({ success: true, workshop: updatedWorkshop });
   } catch (error) {
@@ -454,7 +455,9 @@ app.get("/api/admin/stats", authenticateToken, requireAdmin, async (_req, res) =
     const workshops = await (await getCollection("workshops")).find({}).toArray();
     const bookings = await (await getCollection("bookings")).find({}).toArray();
 
-    const totalRevenue = bookings.reduce((sum, booking) => sum + (booking.amount || 0), 0);
+    const totalRevenue = bookings
+      .filter((booking) => booking.status !== "cancelled")
+      .reduce((sum, booking) => sum + (booking.amount || 0), 0);
     const adminUsers = users.filter((user) => user.role === "admin");
     const studentUsers = users.filter((user) => user.role !== "admin");
 

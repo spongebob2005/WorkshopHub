@@ -1,321 +1,213 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
-import { api } from '../../api/client.ts';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Search, BookOpen, Trash2, Calendar, DollarSign, User, GraduationCap } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Download, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { api } from '../../api/client.ts';
+import { AdminPage, ConfirmAction, SearchField, Segmented, SkeletonRows, StatRow, tableClass } from '../../components/AdminUI';
+import { btn } from '../../components/PageState';
 
-interface Booking {
+interface Registration {
   id: string;
   userId: string;
-  userName: string;
-  userEmail: string;
+  userName?: string;
+  userEmail?: string;
   workshopId: string;
-  workshopTitle: string;
-  date: string;
-  price: number;
+  workshopTitle?: string;
+  date?: string;
+  price?: number;
+  amount?: number;
+  status?: 'confirmed' | 'cancelled';
+  paymentId?: string;
   paymentMethod?: string;
   bookingDate?: string;
 }
 
+type StatusFilter = 'all' | 'confirmed' | 'cancelled';
+
+const amountOf = (b: Registration) => b.amount ?? b.price ?? 0;
+const shortDate = (iso?: string) =>
+  iso ? new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+
 export const ManageRegistrations = () => {
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [filteredBookings, setFilteredBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<Registration[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchBookings();
-  }, []);
-
-  useEffect(() => {
-    const filtered = bookings.filter(b =>
-      b.userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.userEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      b.workshopTitle?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredBookings(filtered);
-  }, [searchQuery, bookings]);
 
   const fetchBookings = async () => {
     try {
-      const data = await api.get('/bookings');
-      setBookings(data);
-      setFilteredBookings(data);
+      setBookings(await api.get('/bookings'));
     } catch (error) {
       console.error('Error fetching bookings:', error);
-      toast.error('Failed to load registrations');
+      toast.error("Couldn't load registrations");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const visible = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return bookings
+      .filter(b => {
+        const status = b.status ?? 'confirmed';
+        const matches =
+          b.userName?.toLowerCase().includes(q) || b.userEmail?.toLowerCase().includes(q) || b.workshopTitle?.toLowerCase().includes(q);
+        return (statusFilter === 'all' || status === statusFilter) && (q === '' || matches);
+      })
+      .sort((a, b) => new Date(b.bookingDate ?? 0).getTime() - new Date(a.bookingDate ?? 0).getTime());
+  }, [bookings, searchQuery, statusFilter]);
+
+  const confirmed = bookings.filter(b => b.status !== 'cancelled');
+  const revenue = confirmed.reduce((sum, b) => sum + amountOf(b), 0);
+
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this registration?')) return;
-    
     try {
       await api.delete(`/bookings/${id}`);
-      toast.success('Registration deleted successfully');
+      toast.success('Registration deleted');
       fetchBookings();
     } catch (error) {
       console.error('Error deleting booking:', error);
-      toast.error('Failed to delete registration');
+      toast.error("Couldn't delete that registration");
     }
   };
 
-  const totalRevenue = filteredBookings.reduce((sum, b) => sum + (b.price || 0), 0);
-
   const exportToCSV = () => {
-    if (filteredBookings.length === 0) {
-      toast.error("No data to export");
+    if (visible.length === 0) {
+      toast.error('Nothing to export');
       return;
     }
-    const headers = ["Booking ID", "Student Name", "Email", "Workshop", "Date", "Amount", "Payment Method", "Booking Date"];
-    const rows = filteredBookings.map(b => [
-      b.id, b.userName || "", b.userEmail || "", b.workshopTitle || "",
-      b.date || "", b.price ?? "", b.paymentMethod || "N/A",
-      b.bookingDate ? new Date(b.bookingDate).toLocaleDateString() : ""
+    const headers = ['Booking ID', 'Student', 'Email', 'Workshop', 'Workshop date', 'Amount', 'Status', 'Payment ID', 'Booked on'];
+    const rows = visible.map(b => [
+      b.id,
+      b.userName ?? '',
+      b.userEmail ?? '',
+      b.workshopTitle ?? '',
+      b.date ?? '',
+      amountOf(b),
+      b.status ?? 'confirmed',
+      b.paymentId ?? '',
+      b.bookingDate ? new Date(b.bookingDate).toISOString().slice(0, 10) : '',
     ]);
-    const csvContent = [headers, ...rows]
-      .map(row => row.map(cell => `"${String(cell).replace(/"/g, "\"\"")}"` ).join(","))
-      .join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csvContent], { type: 'text/csv;charset=utf-8;' }));
+    const link = document.createElement('a');
     link.href = url;
     link.download = `registrations_${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-    toast.success(`Exported ${filteredBookings.length} registrations`);
+    toast.success(`Exported ${visible.length} ${visible.length === 1 ? 'row' : 'rows'}`);
   };
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="bg-gray-900 p-3 rounded-xl">
-                <BookOpen className="size-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl tracking-[-0.03em] text-gray-900">Manage Registrations</h1>
-                <p className="text-gray-600">{bookings.length} total registrations</p>
-              </div>
-            </div>
-          </div>
+    <AdminPage
+      title="Registrations"
+      description="Every booking made through checkout, newest first."
+      actions={
+        <button onClick={exportToCSV} className={btn.secondary}>
+          <Download className="size-4" />
+          Export CSV
+        </button>
+      }
+    >
+      <StatRow
+        loading={loading}
+        items={[
+          { label: 'Registrations', value: bookings.length },
+          { label: 'Active', value: confirmed.length },
+          { label: 'Revenue', value: `$${revenue.toLocaleString('en-US', { maximumFractionDigits: 2 })}` },
+          { label: 'Avg. per booking', value: `$${confirmed.length ? (revenue / confirmed.length).toFixed(2) : '0.00'}` },
+        ]}
+      />
 
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search by student name, email, or workshop..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 rounded-xl border-gray-200 bg-white shadow-sm"
-            />
-          </div>
-        </motion.div>
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Segmented
+          id="reg-status"
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
+            { value: 'all', label: 'All', count: bookings.length },
+            { value: 'confirmed', label: 'Confirmed', count: confirmed.length },
+            { value: 'cancelled', label: 'Cancelled', count: bookings.length - confirmed.length },
+          ]}
+        />
+        <SearchField value={searchQuery} onChange={setSearchQuery} placeholder="Search student or workshop" label="Search registrations" className="sm:w-72" />
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl p-6 shadow-lg"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium mb-1">Total Registrations</p>
-                <p className="text-3xl font-semibold text-gray-900">{filteredBookings.length}</p>
-              </div>
-              <div className="bg-green-50 p-3 rounded-xl">
-                <BookOpen className="size-6 text-green-600" />
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl p-6 shadow-lg"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium mb-1">Total Revenue</p>
-                <p className="text-3xl font-semibold text-gray-900">${totalRevenue.toLocaleString()}</p>
-              </div>
-              <div className="bg-amber-50 p-3 rounded-xl">
-                <DollarSign className="size-6 text-amber-600" />
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl p-6 shadow-lg"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-medium mb-1">Avg per Booking</p>
-                <p className="text-3xl font-semibold text-gray-900">
-                  ${filteredBookings.length > 0 ? Math.round(totalRevenue / filteredBookings.length) : 0}
-                </p>
-              </div>
-              <div className="bg-purple-50 p-3 rounded-xl">
-                <GraduationCap className="size-6 text-purple-600" />
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Bookings Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] overflow-hidden"
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Student
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Workshop
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Price
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Payment
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Actions
-                  </th>
+      <div className={tableClass.wrap}>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[48rem]">
+            <thead>
+              <tr>
+                <th className={tableClass.th}>Student</th>
+                <th className={tableClass.th}>Workshop</th>
+                <th className={tableClass.th}>Booked</th>
+                <th className={tableClass.th}>Status</th>
+                <th className={`${tableClass.th} text-right`}>Amount</th>
+                <th className={tableClass.th}>
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <SkeletonRows cols={6} />
+              ) : visible.length === 0 ? (
+                <tr className="border-t border-gray-100">
+                  <td colSpan={6} className="px-5 py-12 text-center text-sm text-gray-500">
+                    {bookings.length === 0 ? 'No one has booked yet.' : 'No registrations match that.'}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {loading ? (
-                  [...Array(5)].map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-gray-200 rounded w-32" />
+              ) : (
+                visible.map(b => {
+                  const cancelled = b.status === 'cancelled';
+                  return (
+                    <tr key={b.id} className={tableClass.row}>
+                      <td className={tableClass.td}>
+                        <p className="text-sm text-gray-900">{b.userName || 'Unknown'}</p>
+                        <p className="text-xs text-gray-500">{b.userEmail}</p>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-gray-200 rounded w-48" />
+                      <td className={`${tableClass.td} max-w-[18rem]`}>
+                        <p className="truncate text-sm text-gray-900">{b.workshopTitle || b.workshopId}</p>
+                        {b.date && <p className="text-xs text-gray-500">Runs {shortDate(b.date)}</p>}
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-gray-200 rounded w-24" />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-gray-200 rounded w-16" />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-gray-200 rounded w-20" />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-8 bg-gray-200 rounded w-20" />
-                      </td>
-                    </tr>
-                  ))
-                ) : filteredBookings.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
-                      No registrations found
-                    </td>
-                  </tr>
-                ) : (
-                  filteredBookings.map((booking, index) => (
-                    <motion.tr
-                      key={booking.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <User className="size-4 text-gray-400" />
-                            <p className="font-medium text-gray-900">{booking.userName}</p>
-                          </div>
-                          <p className="text-sm text-gray-500 ml-6">{booking.userEmail}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <GraduationCap className="size-4 text-gray-400" />
-                          <span className="text-sm text-gray-900">{booking.workshopTitle}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar className="size-4" />
-                          <span className="text-sm">{booking.date}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-1 text-gray-900">
-                          <DollarSign className="size-4" />
-                          <span className="font-semibold">{booking.price}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-block px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                          {booking.paymentMethod || 'Paid'}
+                      <td className={`${tableClass.td} text-sm text-gray-600`}>{shortDate(b.bookingDate)}</td>
+                      <td className={tableClass.td}>
+                        <span className="flex items-center gap-1.5 text-sm text-gray-700">
+                          <span className={`size-1.5 rounded-full ${cancelled ? 'bg-gray-400' : 'bg-emerald-500'}`} />
+                          {cancelled ? 'Cancelled' : 'Confirmed'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <Button
-                          onClick={() => handleDelete(booking.id)}
-                          className="bg-red-50 text-red-600 hover:bg-red-100 border-0 text-xs h-8"
-                        >
-                          <Trash2 className="size-3 mr-1" />
-                          Delete
-                        </Button>
+                      <td className={`${tableClass.td} text-right font-mono text-sm tabular ${cancelled ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
+                        ${amountOf(b)}
                       </td>
-                    </motion.tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
-
-        {/* Export Options */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="mt-8 bg-indigo-50/60 border border-indigo-200 rounded-2xl p-6"
-        >
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-1">Export Data</h3>
-              <p className="text-sm text-gray-600">Download registration data for reporting and analysis</p>
-            </div>
-            <Button onClick={exportToCSV} className="bg-gray-900 hover:bg-indigo-700 text-white border-0">
-              Export to CSV
-            </Button>
-          </div>
-        </motion.div>
+                      <td className={`${tableClass.td} text-right`}>
+                        <ConfirmAction
+                          title="Delete this registration?"
+                          description={
+                            <>
+                              This permanently removes {b.userName || 'the student'}'s booking for {b.workshopTitle || 'this workshop'} from the records.
+                            </>
+                          }
+                          confirmLabel="Delete"
+                          onConfirm={() => handleDelete(b.id)}
+                          trigger={
+                            <button aria-label={`Delete registration ${b.id}`} className={tableClass.dangerButton}>
+                              <Trash2 className="size-4" strokeWidth={1.75} />
+                            </button>
+                          }
+                        />
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </AdminPage>
   );
 };

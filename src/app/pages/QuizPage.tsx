@@ -1,24 +1,14 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useWorkshops } from '../contexts/WorkshopContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/ui/button';
-import { Progress } from '../components/ui/progress';
-import { Card } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  ArrowLeft,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Award,
-  ChevronRight,
-  RotateCcw,
-  Home,
-  Trophy,
-  Target
-} from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, RotateCcw, X } from 'lucide-react';
+import { PageLoader, PageMessage, btn } from '../components/PageState';
+
+const ease = [0.22, 1, 0.36, 1] as const;
+const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+const PASS_MARK = 70;
 
 interface QuizQuestion {
   id: number;
@@ -34,19 +24,58 @@ interface QuizAnswer {
   isCorrect: boolean;
 }
 
+// Sample quiz questions - replace with real quiz data from the workshop when available
+const quizData: QuizQuestion[] = [
+  {
+    id: 1,
+    question: 'What is React primarily used for?',
+    options: ['Database management', 'Building user interfaces', 'Server-side programming', 'Network security'],
+    correctAnswer: 1,
+    explanation: 'React is a JavaScript library for building user interfaces, particularly for single-page applications.',
+  },
+  {
+    id: 2,
+    question: 'Which hook is used for managing state in functional components?',
+    options: ['useEffect', 'useContext', 'useState', 'useReducer'],
+    correctAnswer: 2,
+    explanation: 'useState is the primary hook for managing local state in React functional components.',
+  },
+  {
+    id: 3,
+    question: 'What does JSX stand for?',
+    options: ['JavaScript XML', 'Java Syntax Extension', 'JSON XML', 'JavaScript Extension'],
+    correctAnswer: 0,
+    explanation: 'JSX stands for JavaScript XML, a syntax extension that allows you to write HTML-like code in JavaScript.',
+  },
+  {
+    id: 4,
+    question: 'What is the virtual DOM in React?',
+    options: ['A physical copy of the DOM', 'A lightweight copy of the real DOM kept in memory', 'A browser feature', 'A CSS framework'],
+    correctAnswer: 1,
+    explanation: 'The virtual DOM is a lightweight representation of the real DOM that React uses to optimize updates.',
+  },
+  {
+    id: 5,
+    question: 'Which method is used to update state in a class component?',
+    options: ['this.updateState()', 'this.setState()', 'this.changeState()', 'this.modifyState()'],
+    correctAnswer: 1,
+    explanation: 'this.setState() is the method used to update state in React class components.',
+  },
+];
+
+const formatTime = (seconds: number) =>
+  `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
+
 export const QuizPage = () => {
   const { workshopId, quizIndex } = useParams<{ workshopId: string; quizIndex: string }>();
-  const navigate = useNavigate();
-  const { getWorkshopById, getBookingsByWorkshop } = useWorkshops();
+  const { getWorkshopById, getBookingsByWorkshop, loading } = useWorkshops();
   const { user, isAuthenticated } = useAuth();
   const workshop = getWorkshopById(workshopId!);
 
-  // Check if user is registered for this workshop
-  const registeredUsers = workshop
-    ? getBookingsByWorkshop(workshop.id)
-        .filter((booking) => booking.status === 'confirmed')
-    : [];
-  const isUserRegistered = isAuthenticated && registeredUsers.some(u => u.userId === user?.id);
+  const isUserRegistered =
+    isAuthenticated &&
+    !!workshop &&
+    getBookingsByWorkshop(workshop.id).some(b => b.status === 'confirmed' && b.userId === user?.id);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
@@ -54,129 +83,38 @@ export const QuizPage = () => {
   const [showResult, setShowResult] = useState(false);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [timeElapsed, setTimeElapsed] = useState(0);
-  const [timerRunning, setTimerRunning] = useState(true);
 
-  // Sample quiz questions - Replace with actual quiz data from workshop when available
-  const quizData: QuizQuestion[] = [
-    {
-      id: 1,
-      question: "What is React primarily used for?",
-      options: [
-        "Database management",
-        "Building user interfaces",
-        "Server-side programming",
-        "Network security"
-      ],
-      correctAnswer: 1,
-      explanation: "React is a JavaScript library for building user interfaces, particularly for single-page applications."
-    },
-    {
-      id: 2,
-      question: "Which hook is used for managing state in functional components?",
-      options: [
-        "useEffect",
-        "useContext",
-        "useState",
-        "useReducer"
-      ],
-      correctAnswer: 2,
-      explanation: "useState is the primary hook for managing local state in React functional components."
-    },
-    {
-      id: 3,
-      question: "What does JSX stand for?",
-      options: [
-        "JavaScript XML",
-        "Java Syntax Extension",
-        "JSON XML",
-        "JavaScript Extension"
-      ],
-      correctAnswer: 0,
-      explanation: "JSX stands for JavaScript XML, a syntax extension that allows you to write HTML-like code in JavaScript."
-    },
-    {
-      id: 4,
-      question: "What is the virtual DOM in React?",
-      options: [
-        "A physical copy of the DOM",
-        "A lightweight copy of the real DOM kept in memory",
-        "A browser feature",
-        "A CSS framework"
-      ],
-      correctAnswer: 1,
-      explanation: "The virtual DOM is a lightweight representation of the real DOM that React uses to optimize updates."
-    },
-    {
-      id: 5,
-      question: "Which method is used to update state in a class component?",
-      options: [
-        "this.updateState()",
-        "this.setState()",
-        "this.changeState()",
-        "this.modifyState()"
-      ],
-      correctAnswer: 1,
-      explanation: "this.setState() is the method used to update state in React class components."
-    }
-  ];
-
-  const quizTitle = workshop?.learningContent?.mcqs[Number(quizIndex)]?.title || "Workshop Quiz";
+  const quizTitle = workshop?.learningContent?.mcqs?.[Number(quizIndex)]?.title || 'Workshop quiz';
   const currentQuestion = quizData[currentQuestionIndex];
   const totalQuestions = quizData.length;
-  const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+  const isLast = currentQuestionIndex === totalQuestions - 1;
+  const active = isUserRegistered && !quizCompleted;
 
-  // Timer effect
   useEffect(() => {
-    if (timerRunning && !quizCompleted) {
-      const interval = setInterval(() => {
-        setTimeElapsed(prev => prev + 1);
-      }, 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timerRunning, quizCompleted]);
+    if (!active) return;
+    const interval = setInterval(() => setTimeElapsed(prev => prev + 1), 1000);
+    return () => clearInterval(interval);
+  }, [active]);
 
-  // Format time
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Handle answer selection
-  const handleOptionSelect = (optionIndex: number) => {
-    if (!showResult) {
-      setSelectedOption(optionIndex);
-    }
-  };
-
-  // Submit answer
   const handleSubmitAnswer = () => {
-    if (selectedOption === null) return;
-
-    const isCorrect = selectedOption === currentQuestion.correctAnswer;
-    const newAnswer: QuizAnswer = {
-      questionId: currentQuestion.id,
-      selectedAnswer: selectedOption,
-      isCorrect
-    };
-
-    setAnswers([...answers, newAnswer]);
+    if (selectedOption === null || showResult) return;
+    setAnswers(prev => [
+      ...prev,
+      { questionId: currentQuestion.id, selectedAnswer: selectedOption, isCorrect: selectedOption === currentQuestion.correctAnswer },
+    ]);
     setShowResult(true);
   };
 
-  // Next question
   const handleNextQuestion = () => {
-    if (currentQuestionIndex < totalQuestions - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    if (!isLast) {
+      setCurrentQuestionIndex(i => i + 1);
       setSelectedOption(null);
       setShowResult(false);
     } else {
       setQuizCompleted(true);
-      setTimerRunning(false);
     }
   };
 
-  // Retry quiz
   const handleRetryQuiz = () => {
     setCurrentQuestionIndex(0);
     setAnswers([]);
@@ -184,345 +122,296 @@ export const QuizPage = () => {
     setShowResult(false);
     setQuizCompleted(false);
     setTimeElapsed(0);
-    setTimerRunning(true);
   };
 
-  // Calculate score
-  const calculateScore = () => {
-    const correctAnswers = answers.filter(a => a.isCorrect).length;
-    return {
-      correct: correctAnswers,
-      total: totalQuestions,
-      percentage: Math.round((correctAnswers / totalQuestions) * 100)
+  // Keyboard: A-D or 1-4 to pick, Enter to submit / continue
+  useEffect(() => {
+    if (!active) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if ((e.target as HTMLElement)?.closest('input, textarea')) return;
+      const key = e.key.toUpperCase();
+      const byLetter = LETTERS.indexOf(key);
+      const byNumber = Number(key) - 1;
+      const pick = byLetter >= 0 ? byLetter : Number.isInteger(byNumber) && byNumber >= 0 ? byNumber : -1;
+      if (!showResult && pick >= 0 && pick < currentQuestion.options.length) {
+        setSelectedOption(pick);
+      } else if (e.key === 'Enter' && (e.target as HTMLElement)?.tagName !== 'BUTTON') {
+        if (showResult) handleNextQuestion();
+        else handleSubmitAnswer();
+      }
     };
-  };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
+  if (loading) return <PageLoader />;
 
   if (!workshop) {
     return (
-      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl mb-2 text-gray-700">Workshop not found</h2>
-          <Button onClick={() => navigate('/')}>Back to Home</Button>
-        </div>
-      </div>
+      <PageMessage
+        eyebrow="Quiz"
+        title="That workshop doesn't exist."
+        body="The quiz link points at a workshop that's no longer in the catalog."
+        actions={
+          <Link to="/" className={btn.primary}>
+            Browse workshops
+          </Link>
+        }
+      />
     );
   }
 
   if (!isUserRegistered) {
     return (
-      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="size-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Target className="size-10 text-gray-300" />
-          </div>
-          <h2 className="text-2xl mb-2 text-gray-700">Access Restricted</h2>
-          <p className="text-gray-500 mb-6">You need to register for this workshop to access the quiz.</p>
-          <div className="space-x-4">
-            <Button onClick={() => navigate(`/workshop/${workshopId}`)}>View Workshop</Button>
-            <Button variant="outline" onClick={() => navigate('/')}>Back to Home</Button>
-          </div>
-        </div>
-      </div>
+      <PageMessage
+        eyebrow="Members only"
+        title="Book a seat to take this quiz."
+        body={
+          <>
+            Quizzes for <span className="text-gray-900">{workshop.title}</span> are part of the course materials, which unlock once you've booked.
+          </>
+        }
+        actions={
+          <>
+            <Link to={`/workshop/${workshopId}`} className={btn.primary}>
+              View workshop
+            </Link>
+            <Link to="/" className={btn.ghost}>
+              All workshops
+            </Link>
+          </>
+        }
+      />
     );
   }
 
-  // Results screen
+  // Results
   if (quizCompleted) {
-    const score = calculateScore();
-    const isPassed = score.percentage >= 70;
+    const correct = answers.filter(a => a.isCorrect).length;
+    const percentage = Math.round((correct / totalQuestions) * 100);
+    const isPassed = percentage >= PASS_MARK;
 
     return (
-      <div className="min-h-[100dvh] bg-gray-50 py-12 px-4">
-        <div className="max-w-3xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Card className="p-8 md:p-12 bg-white/80 backdrop-blur-sm border-2 shadow-2xl">
-              {/* Trophy Icon */}
-              <div className="text-center mb-8">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                  className={`inline-flex items-center justify-center w-24 h-24 rounded-full ${
-                    isPassed
-                      ? 'bg-gradient-to-br from-yellow-400 to-amber-500'
-                      : 'bg-gradient-to-br from-gray-300 to-gray-400'
-                  } mb-6 shadow-xl`}
+      <main className="mx-auto max-w-3xl px-4 pb-24 pt-10 sm:px-6 md:pt-16">
+        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease }}>
+          <p className="eyebrow text-indigo-700">{quizTitle}</p>
+          <h1 className="mt-3 text-4xl tracking-[-0.035em] text-gray-900 sm:text-5xl">
+            {isPassed ? 'Passed.' : 'Not quite yet.'}
+          </h1>
+          <p className="mt-3 max-w-[50ch] text-gray-500">
+            {isPassed
+              ? 'You cleared the pass mark. Review the explanations below for anything you guessed.'
+              : `You need ${PASS_MARK}% to pass. Go over the questions you missed, then try again.`}
+          </p>
+        </motion.div>
+
+        <motion.dl
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1, ease }}
+          className="mt-10 grid grid-cols-2 gap-y-6 border-y border-gray-200 py-6 sm:grid-cols-4"
+        >
+          <div>
+            <dt className="text-xs text-gray-500">Score</dt>
+            <dd className={`mt-1 font-mono text-3xl tabular ${isPassed ? 'text-indigo-700' : 'text-gray-900'}`}>{percentage}%</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-gray-500">Correct</dt>
+            <dd className="mt-1 font-mono text-3xl text-gray-900 tabular">{correct}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-gray-500">Missed</dt>
+            <dd className="mt-1 font-mono text-3xl text-gray-900 tabular">{totalQuestions - correct}</dd>
+          </div>
+          <div>
+            <dt className="text-xs text-gray-500">Time</dt>
+            <dd className="mt-1 font-mono text-3xl text-gray-900 tabular">{formatTime(timeElapsed)}</dd>
+          </div>
+        </motion.dl>
+
+        <section className="mt-10" aria-label="Answer review">
+          <h2 className="text-lg text-gray-900">Review</h2>
+          <ol className="mt-4 space-y-2">
+            {quizData.map((question, index) => {
+              const answer = answers[index];
+              const right = answer?.isCorrect;
+              return (
+                <motion.li
+                  key={question.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.15 + index * 0.05, ease }}
+                  className="rounded-xl bg-white p-4 ring-1 ring-gray-900/[0.06]"
                 >
-                  {isPassed ? (
-                    <Trophy className="w-12 h-12 text-white" />
-                  ) : (
-                    <Target className="w-12 h-12 text-white" />
-                  )}
-                </motion.div>
-                
-                <h1 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-2">
-                  {isPassed ? 'Passed' : 'Quiz Complete'}
-                </h1>
-                <p className="text-gray-600">
-                  {isPassed
-                    ? 'You passed the quiz. Nice work.'
-                    : 'Keep practicing to improve your score.'}
-                </p>
-              </div>
-
-              {/* Score Display */}
-              <div className="bg-gray-900 rounded-2xl p-8 mb-8 text-white text-center">
-                <p className="text-sm uppercase tracking-wider opacity-90 mb-2">Your Score</p>
-                <div className="flex items-center justify-center gap-4 mb-2">
-                  <span className="text-6xl font-semibold">{score.percentage}%</span>
-                </div>
-                <p className="opacity-90">
-                  {score.correct} out of {score.total} correct answers
-                </p>
-              </div>
-
-              {/* Stats Grid */}
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
-                  <CheckCircle2 className="w-6 h-6 text-green-500 mx-auto mb-2" />
-                  <p className="text-2xl font-semibold text-gray-900">{score.correct}</p>
-                  <p className="text-xs text-gray-500">Correct</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
-                  <XCircle className="w-6 h-6 text-red-500 mx-auto mb-2" />
-                  <p className="text-2xl font-semibold text-gray-900">{score.total - score.correct}</p>
-                  <p className="text-xs text-gray-500">Incorrect</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4 text-center border border-gray-100">
-                  <Clock className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-                  <p className="text-2xl font-semibold text-gray-900">{formatTime(timeElapsed)}</p>
-                  <p className="text-xs text-gray-500">Time</p>
-                </div>
-              </div>
-
-              {/* Review Answers */}
-              <div className="space-y-3 mb-8">
-                <h3 className="font-semibold text-gray-900 mb-4">Answer Summary</h3>
-                {quizData.map((question, index) => {
-                  const answer = answers[index];
-                  return (
-                    <div
-                      key={question.id}
-                      className={`flex items-center gap-3 p-3 rounded-xl border ${
-                        answer?.isCorrect
-                          ? 'bg-green-50 border-green-200'
-                          : 'bg-red-50 border-red-200'
+                  <div className="flex items-start gap-3">
+                    <span
+                      className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full ${
+                        right ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
                       }`}
+                      aria-label={right ? 'Correct' : 'Incorrect'}
                     >
-                      {answer?.isCorrect ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
-                      ) : (
-                        <XCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                      )}
-                      <span className="text-sm text-gray-700 flex-1">
-                        Question {index + 1}: {question.question}
-                      </span>
+                      {right ? <Check className="size-3" strokeWidth={3} /> : <X className="size-3" strokeWidth={3} />}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm text-gray-900">
+                        <span className="mr-2 font-mono text-xs text-gray-400 tabular">Q{index + 1}</span>
+                        {question.question}
+                      </p>
+                      <p className="mt-1.5 text-sm text-gray-500">
+                        {!right && answer && (
+                          <>
+                            You said <span className="text-gray-700 line-through decoration-red-300">{question.options[answer.selectedAnswer]}</span>.{' '}
+                          </>
+                        )}
+                        Answer: <span className="text-gray-900">{question.options[question.correctAnswer]}</span>
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                </motion.li>
+              );
+            })}
+          </ol>
+        </section>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  onClick={handleRetryQuiz}
-                  variant="outline"
-                  className="flex-1 h-12 rounded-xl"
-                >
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Retry Quiz
-                </Button>
-                <Button
-                  onClick={() => navigate(`/workshop/${workshopId}`)}
-                  className="flex-1 h-12 rounded-xl bg-gray-900 hover:bg-indigo-700"
-                >
-                  <Home className="w-4 h-4 mr-2" />
-                  Back to Workshop
-                </Button>
-              </div>
-            </Card>
-          </motion.div>
+        <div className="mt-10 flex flex-col gap-3 sm:flex-row">
+          <button onClick={handleRetryQuiz} className={btn.secondary}>
+            <RotateCcw className="size-4" />
+            Retake quiz
+          </button>
+          <Link to={`/workshop/${workshopId}`} className={`${btn.primary} group`}>
+            Back to workshop
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
         </div>
-      </div>
+      </main>
     );
   }
 
-  // Quiz interface
+  // Question view
   return (
-    <div className="min-h-[100dvh] bg-gray-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(`/workshop/${workshopId}`)}
-            className="mb-4 hover:bg-white/50"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Workshop
-          </Button>
+    <main className="mx-auto max-w-3xl px-4 pb-24 pt-8 sm:px-6">
+      <Link to={`/workshop/${workshopId}`} className="inline-flex items-center gap-1.5 text-sm text-gray-500 transition-colors hover:text-gray-900">
+        <ArrowLeft className="size-4" />
+        {workshop.title}
+      </Link>
 
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border shadow-lg">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-              <div>
-                <h1 className="text-2xl font-semibold text-gray-900 mb-1">{quizTitle}</h1>
-                <p className="text-gray-600">{workshop.title}</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 bg-indigo-50 px-4 py-2 rounded-xl">
-                  <Clock className="w-4 h-4 text-indigo-600" />
-                  <span className="font-mono font-semibold text-indigo-600">
-                    {formatTime(timeElapsed)}
-                  </span>
-                </div>
-                <Badge variant="secondary" className="px-3 py-1">
-                  Question {currentQuestionIndex + 1}/{totalQuestions}
-                </Badge>
-              </div>
-            </div>
-
-            <Progress value={progress} className="h-2" />
-          </div>
+      <header className="mt-6 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p className="eyebrow text-indigo-700">Quiz</p>
+          <h1 className="mt-2 text-2xl tracking-[-0.03em] text-gray-900 sm:text-3xl">{quizTitle}</h1>
         </div>
+        <div className="flex items-center gap-4 font-mono text-sm text-gray-500 tabular">
+          <span aria-label="Time elapsed">{formatTime(timeElapsed)}</span>
+          <span className="h-4 w-px bg-gray-200" />
+          <span>
+            <span className="text-gray-900">{currentQuestionIndex + 1}</span>/{totalQuestions}
+          </span>
+        </div>
+      </header>
 
-        {/* Question Card */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentQuestionIndex}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card className="p-8 bg-white/80 backdrop-blur-sm border-2 shadow-xl">
-              {/* Question */}
-              <div className="mb-8">
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="bg-gray-900 text-white rounded-xl px-4 py-2 font-semibold text-lg flex-shrink-0">
-                    {currentQuestionIndex + 1}
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900 leading-relaxed pt-1">
-                    {currentQuestion.question}
-                  </h2>
-                </div>
-              </div>
-
-              {/* Options */}
-              <div className="space-y-3 mb-8">
-                {currentQuestion.options.map((option, index) => {
-                  const isSelected = selectedOption === index;
-                  const isCorrect = index === currentQuestion.correctAnswer;
-                  const showCorrectAnswer = showResult && isCorrect;
-                  const showIncorrectAnswer = showResult && isSelected && !isCorrect;
-
-                  return (
-                    <motion.button
-                      key={index}
-                      onClick={() => handleOptionSelect(index)}
-                      disabled={showResult}
-                      whileHover={!showResult ? { scale: 1.02 } : {}}
-                      whileTap={!showResult ? { scale: 0.98 } : {}}
-                      className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-                        showCorrectAnswer
-                          ? 'bg-green-50 border-green-500 shadow-lg'
-                          : showIncorrectAnswer
-                          ? 'bg-red-50 border-red-500 shadow-lg shadow-red-100'
-                          : isSelected
-                          ? 'bg-indigo-50 border-indigo-500 shadow-lg'
-                          : 'bg-white border-gray-200 hover:border-indigo-300 hover:shadow-md'
-                      } ${showResult ? 'cursor-default' : 'cursor-pointer'}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
-                            showCorrectAnswer
-                              ? 'bg-green-500 border-green-500'
-                              : showIncorrectAnswer
-                              ? 'bg-red-500 border-red-500'
-                              : isSelected
-                              ? 'bg-indigo-500 border-indigo-500'
-                              : 'border-gray-300'
-                          }`}
-                        >
-                          {showCorrectAnswer && <CheckCircle2 className="w-4 h-4 text-white" />}
-                          {showIncorrectAnswer && <XCircle className="w-4 h-4 text-white" />}
-                          {isSelected && !showResult && (
-                            <div className="w-3 h-3 bg-white rounded-full" />
-                          )}
-                        </div>
-                        <span
-                          className={`font-medium ${
-                            showCorrectAnswer || showIncorrectAnswer
-                              ? 'text-gray-900'
-                              : isSelected
-                              ? 'text-indigo-900'
-                              : 'text-gray-700'
-                          }`}
-                        >
-                          {option}
-                        </span>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              {/* Explanation */}
-              <AnimatePresence>
-                {showResult && currentQuestion.explanation && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl"
-                  >
-                    <div className="flex gap-2">
-                      <Award className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-semibold text-blue-900 mb-1">Explanation</p>
-                        <p className="text-blue-800 text-sm leading-relaxed">
-                          {currentQuestion.explanation}
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Action Button */}
-              <div className="flex justify-end">
-                {!showResult ? (
-                  <Button
-                    onClick={handleSubmitAnswer}
-                    disabled={selectedOption === null}
-                    className="px-8 h-12 rounded-xl bg-gray-900 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Submit Answer
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={handleNextQuestion}
-                    className="px-8 h-12 rounded-xl bg-gray-900 hover:bg-indigo-700"
-                  >
-                    {currentQuestionIndex < totalQuestions - 1 ? (
-                      <>
-                        Next Question
-                        <ChevronRight className="w-4 h-4 ml-2" />
-                      </>
-                    ) : (
-                      'View Results'
-                    )}
-                  </Button>
-                )}
-              </div>
-            </Card>
-          </motion.div>
-        </AnimatePresence>
+      {/* Segmented progress: one bar per question, coloured by result */}
+      <div className="mt-5 flex gap-1.5" aria-hidden>
+        {quizData.map((q, i) => {
+          const a = answers[i];
+          const color = a ? (a.isCorrect ? 'bg-emerald-500' : 'bg-red-400') : i === currentQuestionIndex ? 'bg-gray-900' : 'bg-gray-200';
+          return <span key={q.id} className={`h-1 flex-1 rounded-full transition-colors duration-300 ${color}`} />;
+        })}
       </div>
-    </div>
+
+      <AnimatePresence mode="wait">
+        <motion.section
+          key={currentQuestionIndex}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.3, ease }}
+          className="mt-10"
+          aria-live="polite"
+        >
+          <h2 className="text-xl leading-snug text-gray-900 sm:text-2xl">{currentQuestion.question}</h2>
+
+          <div role="radiogroup" aria-label="Answers" className="mt-6 space-y-2">
+            {currentQuestion.options.map((option, index) => {
+              const isSelected = selectedOption === index;
+              const isCorrect = index === currentQuestion.correctAnswer;
+              const markCorrect = showResult && isCorrect;
+              const markWrong = showResult && isSelected && !isCorrect;
+
+              const tone = markCorrect
+                ? 'bg-emerald-50 ring-emerald-500 text-gray-900'
+                : markWrong
+                  ? 'bg-red-50 ring-red-400 text-gray-900'
+                  : isSelected
+                    ? 'bg-white ring-2 ring-gray-900 text-gray-900'
+                    : showResult
+                      ? 'bg-white ring-gray-900/[0.06] text-gray-400'
+                      : 'bg-white ring-gray-900/[0.06] text-gray-700 hover:ring-gray-900/20';
+
+              const keyTone = markCorrect
+                ? 'bg-emerald-600 text-white'
+                : markWrong
+                  ? 'bg-red-500 text-white'
+                  : isSelected
+                    ? 'bg-gray-900 text-white'
+                    : 'bg-gray-100 text-gray-500';
+
+              return (
+                <button
+                  key={index}
+                  role="radio"
+                  aria-checked={isSelected}
+                  onClick={() => !showResult && setSelectedOption(index)}
+                  disabled={showResult}
+                  className={`press flex w-full items-center gap-4 rounded-xl p-3.5 text-left ring-1 transition-[box-shadow,background-color,color] disabled:cursor-default ${tone}`}
+                >
+                  <span className={`flex size-7 shrink-0 items-center justify-center rounded-md font-mono text-xs transition-colors ${keyTone}`}>
+                    {markCorrect ? <Check className="size-3.5" strokeWidth={3} /> : markWrong ? <X className="size-3.5" strokeWidth={3} /> : LETTERS[index]}
+                  </span>
+                  <span className="text-[0.95rem]">{option}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <AnimatePresence>
+            {showResult && currentQuestion.explanation && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3, ease }}
+                className="overflow-hidden"
+              >
+                <div className="mt-6 border-l-2 border-indigo-500 pl-4">
+                  <p className="text-sm text-gray-900">
+                    {answers[currentQuestionIndex]?.isCorrect ? 'Correct.' : 'Not quite.'}
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-600">{currentQuestion.explanation}</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="mt-8 flex items-center justify-between gap-4">
+            <p className="hidden text-xs text-gray-400 sm:block">
+              Press <kbd className="rounded border border-gray-200 bg-white px-1 font-mono">A</kbd>–
+              <kbd className="rounded border border-gray-200 bg-white px-1 font-mono">{LETTERS[currentQuestion.options.length - 1]}</kbd> to choose,{' '}
+              <kbd className="rounded border border-gray-200 bg-white px-1 font-mono">Enter</kbd> to continue
+            </p>
+            {!showResult ? (
+              <button onClick={handleSubmitAnswer} disabled={selectedOption === null} className={`${btn.primary} ml-auto`}>
+                Check answer
+              </button>
+            ) : (
+              <button onClick={handleNextQuestion} className={`${btn.primary} group ml-auto`}>
+                {isLast ? 'See results' : 'Next question'}
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+              </button>
+            )}
+          </div>
+        </motion.section>
+      </AnimatePresence>
+    </main>
   );
 };

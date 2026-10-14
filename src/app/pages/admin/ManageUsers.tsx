@@ -1,288 +1,198 @@
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { api } from '../../api/client.ts';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Search, Users, Trash2, Shield, User, Mail, Edit } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ShieldCheck, ShieldOff, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { api } from '../../api/client.ts';
+import { useAuth } from '../../contexts/AuthContext';
+import { AdminPage, ConfirmAction, SearchField, Segmented, SkeletonRows, StatRow, tableClass } from '../../components/AdminUI';
 
 interface UserData {
   id: string;
   name: string;
   email: string;
   role?: 'admin' | 'student';
-  password?: string;
+  createdAt?: string;
 }
 
+type RoleFilter = 'all' | 'student' | 'admin';
+
 export const ManageUsers = () => {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState<UserData[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<UserData[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>('all');
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  useEffect(() => {
-    const filtered = users.filter(u =>
-      u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (u.role || 'student').toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredUsers(filtered);
-  }, [searchQuery, users]);
 
   const fetchUsers = async () => {
     try {
-      const data = await api.get('/users');
-      setUsers(data);
-      setFilteredUsers(data);
+      setUsers(await api.get('/users'));
     } catch (error) {
       console.error('Error fetching users:', error);
-      toast.error('Failed to load users');
+      toast.error("Couldn't load users");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDelete = async (email: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
-    
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const admins = users.filter(u => u.role === 'admin');
+  const students = users.filter(u => u.role !== 'admin');
+
+  const visible = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return users.filter(u => {
+      const role = u.role === 'admin' ? 'admin' : 'student';
+      return (roleFilter === 'all' || role === roleFilter) && (u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q));
+    });
+  }, [users, searchQuery, roleFilter]);
+
+  const handleDelete = async (user: UserData) => {
     try {
-      await api.delete(`/users/${email}`);
-      toast.success('User deleted successfully');
+      await api.delete(`/users/${user.email}`);
+      toast.success(`Removed ${user.name}`);
       fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
-      toast.error('Failed to delete user');
+      toast.error("Couldn't delete that user");
     }
   };
 
   const handleToggleRole = async (user: UserData) => {
     const newRole = user.role === 'admin' ? 'student' : 'admin';
-    
-    if (!confirm(`Change ${user.name}'s role to ${newRole}?`)) return;
-    
     try {
       await api.put(`/users/${user.email}`, { role: newRole });
-      toast.success(`User role updated to ${newRole}`);
+      toast.success(`${user.name} is now ${newRole === 'admin' ? 'an admin' : 'a student'}`);
       fetchUsers();
     } catch (error) {
       console.error('Error updating user role:', error);
-      toast.error('Failed to update user role');
+      toast.error("Couldn't change that role");
     }
   };
 
-  const admins = filteredUsers.filter(u => u.role === 'admin');
-  const students = filteredUsers.filter(u => u.role !== 'admin');
-
   return (
-    <div className="min-h-[100dvh] bg-gray-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="bg-gray-900 p-3 rounded-xl">
-                <Users className="size-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl tracking-[-0.03em] text-gray-900">Manage Users</h1>
-                <p className="text-gray-600">{users.length} users total ({admins.length} admins, {students.length} students)</p>
-              </div>
-            </div>
-          </div>
+    <AdminPage title="Users" description="Everyone with an account. Admins can open this console; students can browse and book.">
+      <StatRow
+        loading={loading}
+        items={[
+          { label: 'Accounts', value: users.length },
+          { label: 'Students', value: students.length },
+          { label: 'Admins', value: admins.length },
+        ]}
+      />
 
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Search users by name, email, or role..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 h-12 rounded-xl border-gray-200 bg-white shadow-sm"
-            />
-          </div>
-        </motion.div>
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <Segmented
+          id="user-role"
+          value={roleFilter}
+          onChange={setRoleFilter}
+          options={[
+            { value: 'all', label: 'All', count: users.length },
+            { value: 'student', label: 'Students', count: students.length },
+            { value: 'admin', label: 'Admins', count: admins.length },
+          ]}
+        />
+        <SearchField value={searchQuery} onChange={setSearchQuery} placeholder="Search name or email" label="Search users" className="sm:w-72" />
+      </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-gray-900 rounded-2xl p-6 text-white shadow-lg"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium mb-1">Total Students</p>
-                <p className="text-4xl font-semibold">{students.length}</p>
-              </div>
-              <div className="bg-white/20 p-4 rounded-xl">
-                <User className="size-8" />
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-gray-900 rounded-2xl p-6 text-white shadow-lg"
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm font-medium mb-1">Total Admins</p>
-                <p className="text-4xl font-semibold">{admins.length}</p>
-              </div>
-              <div className="bg-white/20 p-4 rounded-xl">
-                <Shield className="size-8" />
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Users Table */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] overflow-hidden"
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    User
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                    Actions
-                  </th>
+      <div className={tableClass.wrap}>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[40rem]">
+            <thead>
+              <tr>
+                <th className={tableClass.th}>Name</th>
+                <th className={tableClass.th}>Email</th>
+                <th className={tableClass.th}>Role</th>
+                <th className={`${tableClass.th} text-right`}>
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <SkeletonRows cols={4} />
+              ) : visible.length === 0 ? (
+                <tr className="border-t border-gray-100">
+                  <td colSpan={4} className="px-5 py-12 text-center text-sm text-gray-500">
+                    No users match that.
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {loading ? (
-                  [...Array(5)].map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td className="px-6 py-4">
+              ) : (
+                visible.map(user => {
+                  const isAdmin = user.role === 'admin';
+                  const isSelf = user.email === currentUser?.email;
+                  return (
+                    <tr key={user.email} className={tableClass.row}>
+                      <td className={tableClass.td}>
                         <div className="flex items-center gap-3">
-                          <div className="size-10 bg-gray-200 rounded-full" />
-                          <div className="h-4 bg-gray-200 rounded w-32" />
+                          <span
+                            className={`flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold ${
+                              isAdmin ? 'bg-gray-900 text-white' : 'bg-indigo-100 text-indigo-800'
+                            }`}
+                          >
+                            {user.name?.charAt(0).toUpperCase()}
+                          </span>
+                          <span className="text-sm text-gray-900">{user.name}</span>
+                          {isSelf && <span className="rounded-md bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">You</span>}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="h-4 bg-gray-200 rounded w-48" />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-6 bg-gray-200 rounded w-20" />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-8 bg-gray-200 rounded w-24" />
-                      </td>
-                    </tr>
-                  ))
-                ) : filteredUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
-                      No users found
-                    </td>
-                  </tr>
-                ) : (
-                  filteredUsers.map((user, index) => (
-                    <motion.tr
-                      key={user.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className={`size-10 rounded-full flex items-center justify-center text-white font-semibold ${
-                            user.role === 'admin' ? 'bg-gray-900' : 'bg-gray-900'
-                          }`}>
-                            {user.name.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{user.name}</p>
-                            <p className="text-sm text-gray-500">ID: {user.id}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Mail className="size-4" />
-                          <span className="text-sm">{user.email}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${
-                          user.role === 'admin' 
-                            ? 'bg-purple-100 text-purple-700' 
-                            : 'bg-blue-100 text-blue-700'
-                        }`}>
-                          {user.role === 'admin' ? <Shield className="size-3" /> : <User className="size-3" />}
-                          {user.role || 'student'}
+                      <td className={`${tableClass.td} text-sm text-gray-600`}>{user.email}</td>
+                      <td className={tableClass.td}>
+                        <span className="flex items-center gap-1.5 text-sm text-gray-700">
+                          <span className={`size-1.5 rounded-full ${isAdmin ? 'bg-gray-900' : 'bg-indigo-500'}`} />
+                          {isAdmin ? 'Admin' : 'Student'}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            onClick={() => handleToggleRole(user)}
-                            className="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-0 text-xs h-8"
-                          >
-                            <Edit className="size-3 mr-1" />
-                            Toggle Role
-                          </Button>
-                          <Button
-                            onClick={() => handleDelete(user.email)}
-                            className="bg-red-50 text-red-600 hover:bg-red-100 border-0 text-xs h-8"
-                          >
-                            <Trash2 className="size-3 mr-1" />
-                            Delete
-                          </Button>
+                      <td className={`${tableClass.td} text-right`}>
+                        <div className="flex justify-end gap-1">
+                          <ConfirmAction
+                            destructive={false}
+                            title={isAdmin ? `Remove admin access for ${user.name}?` : `Make ${user.name} an admin?`}
+                            description={
+                              isAdmin
+                                ? 'They keep their account and bookings but lose access to this console.'
+                                : 'Admins can edit workshops, change roles and delete accounts.'
+                            }
+                            confirmLabel={isAdmin ? 'Make student' : 'Make admin'}
+                            onConfirm={() => handleToggleRole(user)}
+                            trigger={
+                              <button
+                                disabled={isSelf}
+                                title={isSelf ? "You can't change your own role" : isAdmin ? 'Make student' : 'Make admin'}
+                                aria-label={isAdmin ? `Make ${user.name} a student` : `Make ${user.name} an admin`}
+                                className={tableClass.iconButton}
+                              >
+                                {isAdmin ? <ShieldOff className="size-4" strokeWidth={1.75} /> : <ShieldCheck className="size-4" strokeWidth={1.75} />}
+                              </button>
+                            }
+                          />
+                          <ConfirmAction
+                            title={`Delete ${user.name}'s account?`}
+                            description="This removes their login. Their past bookings stay in the registrations list."
+                            confirmLabel="Delete account"
+                            onConfirm={() => handleDelete(user)}
+                            trigger={
+                              <button
+                                disabled={isSelf}
+                                title={isSelf ? "You can't delete your own account here" : 'Delete'}
+                                aria-label={`Delete ${user.name}`}
+                                className={tableClass.dangerButton}
+                              >
+                                <Trash2 className="size-4" strokeWidth={1.75} />
+                              </button>
+                            }
+                          />
                         </div>
                       </td>
-                    </motion.tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </motion.div>
-
-        {/* Info Box */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-8 bg-blue-50 border border-blue-200 rounded-2xl p-6"
-        >
-          <div className="flex items-start gap-3">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <Shield className="size-5 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="font-semibold text-blue-900 mb-1">Admin Privileges</h3>
-              <p className="text-sm text-blue-700">
-                Admins can access this dashboard, manage workshops, users, and registrations. 
-                Students can only browse and book workshops.
-              </p>
-            </div>
-          </div>
-        </motion.div>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </AdminPage>
   );
 };

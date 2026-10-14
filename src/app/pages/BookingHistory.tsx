@@ -1,377 +1,248 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useWorkshops } from '../contexts/WorkshopContext';
+import { Link } from 'react-router-dom';
+import { useWorkshops, Booking, Workshop } from '../contexts/WorkshopContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Button } from '../components/ui/button';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader,
   AlertDialogTitle, AlertDialogTrigger,
 } from '../components/ui/alert-dialog';
-import {
-  Calendar, Clock, DollarSign, X, Eye, Download, BookOpen,
-  CheckCircle2, XCircle, Filter, TrendingUp
-} from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import jsPDF from 'jspdf';
 import { toast } from 'sonner';
+import { WorkshopCover } from '../components/WorkshopCover';
+import { PageLoader, btn } from '../components/PageState';
+import { downloadReceipt } from '../lib/receipt';
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 type FilterTab = 'all' | 'confirmed' | 'cancelled';
 
+interface BookingRowProps {
+  booking: Booking;
+  workshop: Workshop;
+  onCancel: () => void;
+  onReceipt: () => void;
+}
+
+const BookingRow = ({ booking, workshop, onCancel, onReceipt }: BookingRowProps) => {
+  const cancelled = booking.status === 'cancelled';
+  const date = new Date(workshop.date);
+  const state = cancelled ? { label: 'Cancelled', dot: 'bg-gray-400' } : { label: 'Confirmed', dot: 'bg-emerald-500' };
+
+  return (
+    <motion.li
+      layout
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.35, ease }}
+      className={`flex flex-col gap-4 rounded-2xl bg-white p-3 ring-1 ring-gray-900/[0.06] sm:flex-row sm:items-center ${cancelled ? 'opacity-70' : ''}`}
+    >
+      {/* Date block */}
+      <div className="flex items-center gap-4 sm:w-auto">
+        <div className="relative shrink-0">
+          <WorkshopCover category={workshop.category} image={workshop.image} title={workshop.title} className="size-20 rounded-xl" />
+          <div className="absolute inset-x-1.5 bottom-1.5 z-10 rounded-md bg-white/95 py-0.5 text-center font-mono text-[11px] text-gray-900 tabular backdrop-blur">
+            {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+          </div>
+        </div>
+
+        <div className="min-w-0 flex-1 sm:hidden">
+          <p className="line-clamp-2 text-sm text-gray-900">{workshop.title}</p>
+        </div>
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 text-xs text-gray-500">
+          <span className="flex items-center gap-1.5 text-gray-700">
+            <span className={`size-1.5 rounded-full ${state.dot}`} />
+            {state.label}
+          </span>
+          <span className="h-3 w-px bg-gray-200" />
+          <span>{workshop.time}</span>
+          <span className="h-3 w-px bg-gray-200" />
+          <span className="font-mono tabular">${booking.amount}</span>
+        </div>
+        <Link to={`/workshop/${workshop.id}`} className="mt-1.5 hidden truncate text-gray-900 hover:text-indigo-700 sm:block">
+          {workshop.title}
+        </Link>
+        <p className="mt-0.5 truncate text-sm text-gray-500">
+          with {workshop.instructor} · booked {new Date(booking.bookingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+        </p>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-1 border-t border-gray-100 pt-3 sm:border-0 sm:pt-0">
+        <button onClick={onReceipt} className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900">
+          <Download className="size-4" strokeWidth={1.75} />
+          Receipt
+        </button>
+        {!cancelled && (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button className="rounded-lg px-3 py-2 text-sm text-gray-500 transition-colors hover:bg-red-50 hover:text-red-700">Cancel</button>
+            </AlertDialogTrigger>
+            <AlertDialogContent className="rounded-2xl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Your seat for <span className="text-gray-900">{workshop.title}</span> will go back on sale. You can book again later if seats are still open.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel className="rounded-lg">Keep my seat</AlertDialogCancel>
+                <AlertDialogAction onClick={onCancel} className="rounded-lg bg-red-600 hover:bg-red-700">
+                  Cancel booking
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+        <Link
+          to={`/workshop/${workshop.id}`}
+          aria-label={`Open ${workshop.title}`}
+          className="ml-auto rounded-lg p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-900 sm:ml-0"
+        >
+          <ArrowUpRight className="size-4" />
+        </Link>
+      </div>
+    </motion.li>
+  );
+};
+
 export const BookingHistory = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { getBookingsByUser, getWorkshopById, cancelBooking, loading } = useWorkshops();
   const [activeTab, setActiveTab] = useState<FilterTab>('all');
 
-  const userBookings = user ? getBookingsByUser(user.id) : [];
+  if (loading) return <PageLoader />;
 
-  const filteredBookings = userBookings.filter(b => {
-    if (activeTab === 'all') return true;
-    return b.status === activeTab;
-  });
+  const rows = (user ? getBookingsByUser(user.id) : [])
+    .map(booking => {
+      const workshop = getWorkshopById(booking.workshopId);
+      return workshop ? { booking, workshop } : null;
+    })
+    .filter((row): row is { booking: Booking; workshop: Workshop } => row !== null)
+    .sort((a, b) => new Date(a.workshop.date).getTime() - new Date(b.workshop.date).getTime());
 
-  const stats = {
-    total: userBookings.length,
-    confirmed: userBookings.filter(b => b.status === 'confirmed').length,
-    cancelled: userBookings.filter(b => b.status === 'cancelled').length,
-    spent: userBookings.filter(b => b.status === 'confirmed').reduce((sum, b) => sum + b.amount, 0),
+  const groups: Record<FilterTab, typeof rows> = {
+    all: rows,
+    confirmed: rows.filter(r => r.booking.status === 'confirmed'),
+    cancelled: rows.filter(r => r.booking.status === 'cancelled'),
   };
+  const spent = rows.filter(r => r.booking.status === 'confirmed').reduce((sum, r) => sum + r.booking.amount, 0);
+  const visible = groups[activeTab];
 
   const handleCancelBooking = async (bookingId: string) => {
     try {
       await cancelBooking(bookingId);
       toast.success('Booking cancelled. Your seat has been released.');
-    } catch (e) {
-      toast.error('Failed to cancel booking.');
+    } catch {
+      toast.error("Couldn't cancel the booking. Try again.");
     }
   };
 
-  const downloadReceipt = (bookingId: string) => {
-    const booking = userBookings.find(b => b.id === bookingId);
-    const workshop = booking ? getWorkshopById(booking.workshopId) : null;
-    if (!booking || !workshop || !user) return;
-
-    const doc = new jsPDF();
-
-    doc.setFillColor(79, 70, 229);
-    doc.rect(0, 0, 210, 50, 'F');
-    doc.setFillColor(124, 58, 237);
-    doc.rect(105, 0, 105, 50, 'F');
-
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(26);
-    doc.text('WorkshopHub', 20, 22);
-    doc.setFontSize(12);
-    doc.text('Payment Receipt', 20, 36);
-
-    doc.setDrawColor(229, 231, 235);
-    doc.setLineWidth(0.5);
-    doc.line(20, 60, 190, 60);
-
-    doc.setTextColor(107, 114, 128);
-    doc.setFontSize(9);
-    doc.text('BOOKING INFORMATION', 20, 73);
-
-    doc.setTextColor(17, 24, 39);
-    doc.setFontSize(11);
-    doc.text(`Booking ID: ${booking.id}`, 20, 84);
-    doc.text(`Payment ID: ${booking.paymentId}`, 20, 94);
-    doc.text(`Booking Date: ${new Date(booking.bookingDate).toLocaleDateString()}`, 20, 104);
-
-    doc.line(20, 114, 190, 114);
-
-    doc.setTextColor(107, 114, 128);
-    doc.setFontSize(9);
-    doc.text('CUSTOMER INFORMATION', 20, 126);
-
-    doc.setTextColor(17, 24, 39);
-    doc.setFontSize(11);
-    doc.text(`Name: ${user.name}`, 20, 137);
-    doc.text(`Email: ${user.email}`, 20, 147);
-
-    doc.line(20, 157, 190, 157);
-
-    doc.setTextColor(107, 114, 128);
-    doc.setFontSize(9);
-    doc.text('WORKSHOP DETAILS', 20, 169);
-
-    doc.setTextColor(17, 24, 39);
-    doc.setFontSize(11);
-    doc.text(`Title: ${workshop.title}`, 20, 180);
-    doc.text(`Instructor: ${workshop.instructor}`, 20, 190);
-    doc.text(`Date: ${new Date(workshop.date).toLocaleDateString()}`, 20, 200);
-    doc.text(`Time: ${workshop.time}`, 20, 210);
-    doc.text(`Duration: ${workshop.duration}`, 20, 220);
-
-    doc.line(20, 240, 190, 240);
-
-    doc.setTextColor(107, 114, 128);
-    doc.setFontSize(9);
-    doc.text('PAYMENT SUMMARY', 20, 252);
-
-    doc.setFillColor(238, 242, 255);
-    doc.roundedRect(20, 258, 170, 22, 3, 3, 'F');
-    doc.setTextColor(79, 70, 229);
-    doc.setFontSize(13);
-    doc.text(`Amount Paid: $${booking.amount}`, 28, 272);
-    doc.setTextColor(22, 163, 74);
-    doc.text(`Status: ${booking.status.toUpperCase()}`, 130, 272);
-
-    doc.setFillColor(249, 250, 251);
-    doc.rect(0, 283, 210, 14, 'F');
-    doc.setFontSize(9);
-    doc.setTextColor(156, 163, 175);
-    doc.text('Thank you for choosing WorkshopHub!', 20, 291);
-
-    doc.save(`receipt-${booking.id}.pdf`);
-  };
-
-  const tabs: { id: FilterTab; label: string; count: number }[] = [
-    { id: 'all', label: 'All Bookings', count: stats.total },
-    { id: 'confirmed', label: 'Confirmed', count: stats.confirmed },
-    { id: 'cancelled', label: 'Cancelled', count: stats.cancelled },
+  const tabs: { id: FilterTab; label: string }[] = [
+    { id: 'all', label: 'All' },
+    { id: 'confirmed', label: 'Confirmed' },
+    { id: 'cancelled', label: 'Cancelled' },
   ];
 
-  if (loading) {
-    return (
-      <div className="min-h-[100dvh] bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full size-8 border-2 border-gray-200 border-t-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (userBookings.length === 0) {
-    return (
-      <div className="min-h-[100dvh] bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <h1 className="text-3xl text-gray-900 mb-2">My Bookings</h1>
-            <p className="text-gray-500 mb-10">Manage and track your workshop registrations</p>
-
-            <div className="bg-white rounded-3xl ring-1 ring-gray-900/[0.06] p-16 text-center">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
-                className="inline-flex items-center justify-center size-24 bg-indigo-50 rounded-full mb-6"
-              >
-                <BookOpen className="size-12 text-indigo-300" />
-              </motion.div>
-              <h2 className="text-xl text-gray-700 mb-2">No Bookings Yet</h2>
-              <p className="text-gray-500 mb-8 max-w-sm mx-auto">
-                You haven't registered for any workshops yet. Browse our expert-led sessions and get started!
-              </p>
-              <button
-                onClick={() => navigate('/')}
-                className="px-8 py-3 bg-gray-900 text-white rounded-xl hover:bg-indigo-700 transition-all shadow-lg font-medium"
-              >
-                Browse Workshops
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
+  const emptyCopy: Record<FilterTab, string> = {
+    all: 'No bookings yet.',
+    confirmed: 'No active bookings right now.',
+    cancelled: 'No cancelled bookings.',
+  };
 
   return (
-    <div className="min-h-[100dvh] bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl text-gray-900 mb-1">My Bookings</h1>
-          <p className="text-gray-500">Track and manage your workshop registrations</p>
-        </motion.div>
+    <main className="mx-auto max-w-5xl px-4 pb-24 pt-10 sm:px-6 md:pt-14 lg:px-8">
+      <motion.header initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }}>
+        <h1 className="text-3xl tracking-[-0.03em] text-gray-900 sm:text-4xl">My bookings</h1>
+        <p className="mt-2 text-gray-500">Seats you've reserved, receipts, and anything you've cancelled.</p>
+      </motion.header>
 
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8"
-        >
-          {[
-            { label: 'Total Bookings', value: stats.total, icon: BookOpen, color: 'bg-indigo-50 text-indigo-600', iconBg: 'bg-indigo-100' },
-            { label: 'Confirmed', value: stats.confirmed, icon: CheckCircle2, color: 'bg-green-50 text-green-600', iconBg: 'bg-green-100' },
-            { label: 'Cancelled', value: stats.cancelled, icon: XCircle, color: 'bg-red-50 text-red-500', iconBg: 'bg-red-100' },
-            { label: 'Total Spent', value: `$${stats.spent.toFixed(2)}`, icon: TrendingUp, color: 'bg-purple-50 text-purple-600', iconBg: 'bg-purple-100' },
-          ].map(({ label, value, icon: Icon, color, iconBg }) => (
-            <div key={label} className={`${color.split(' ')[0]} rounded-2xl p-4 border border-white`}>
-              <div className={`${iconBg} rounded-xl p-2 w-fit mb-3`}>
-                <Icon className={`size-4 ${color.split(' ')[1]}`} />
-              </div>
-              <p className={`text-2xl font-semibold ${color.split(' ')[1]}`}>{value}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{label}</p>
-            </div>
-          ))}
-        </motion.div>
+      <dl className="mt-10 grid grid-cols-2 gap-y-6 border-y border-gray-200 py-6 sm:grid-cols-4">
+        {[
+          { label: 'Bookings', value: groups.all.length },
+          { label: 'Confirmed', value: groups.confirmed.length },
+          { label: 'Cancelled', value: groups.cancelled.length },
+          { label: 'Total spent', value: `$${spent.toFixed(2)}` },
+        ].map(({ label, value }) => (
+          <div key={label}>
+            <dt className="text-xs text-gray-500">{label}</dt>
+            <dd className="mt-1 font-mono text-2xl text-gray-900 tabular">{value}</dd>
+          </div>
+        ))}
+      </dl>
 
-        {/* Tabs */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2 }}
-          className="flex items-center gap-2 bg-white rounded-2xl p-1.5 ring-1 ring-gray-900/[0.06] mb-6 w-fit"
-        >
-          {tabs.map(({ id, label, count }) => (
-            <button
-              key={id}
-              onClick={() => setActiveTab(id)}
-              className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeTab === id
-                  ? 'text-indigo-700 bg-indigo-50'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              {label}
-              <span className={`px-1.5 py-0.5 rounded-md text-xs font-medium ${
-                activeTab === id ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-100 text-gray-500'
-              }`}>
-                {count}
-              </span>
-            </button>
-          ))}
-        </motion.div>
-
-        {/* Booking Cards */}
-        <AnimatePresence mode="popLayout">
-          {filteredBookings.length === 0 ? (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="text-center py-12 bg-white rounded-2xl border border-gray-100"
-            >
-              <Filter className="size-10 text-gray-200 mx-auto mb-3" />
-              <p className="text-gray-500">No {activeTab} bookings found</p>
-            </motion.div>
-          ) : (
-            <div className="space-y-4">
-              {filteredBookings.map((booking, index) => {
-                const workshop = getWorkshopById(booking.workshopId);
-                if (!workshop) return null;
-                const isConfirmed = booking.status === 'confirmed';
-
+      {rows.length === 0 ? (
+        <div className="mt-10 rounded-2xl border border-dashed border-gray-300 px-6 py-20 text-center">
+          <p className="font-display text-3xl text-gray-900">No bookings yet.</p>
+          <p className="mx-auto mt-2 max-w-[44ch] text-gray-500">When you reserve a seat it shows up here, along with its receipt.</p>
+          <Link to="/" className={`${btn.primary} group mt-6`}>
+            Browse workshops
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+          </Link>
+        </div>
+      ) : (
+        <>
+          <div className="-mx-4 mt-8 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+            <div role="tablist" aria-label="Filter bookings" className="flex w-max gap-1 rounded-xl bg-gray-100 p-1">
+              {tabs.map(({ id, label }) => {
+                const active = activeTab === id;
                 return (
-                  <motion.div
-                    key={booking.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ delay: index * 0.06 }}
-                    className="bg-white rounded-2xl ring-1 ring-gray-900/[0.06] overflow-hidden hover:shadow-md transition-shadow"
+                  <button
+                    key={id}
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setActiveTab(id)}
+                    className={`relative isolate flex items-center gap-2 whitespace-nowrap rounded-lg px-3.5 py-1.5 text-sm transition-colors ${
+                      active ? 'text-gray-900' : 'text-gray-500 hover:text-gray-900'
+                    }`}
                   >
-                    {/* Card header with status indicator */}
-                    <div className={`h-1 w-full ${isConfirmed ? 'bg-gray-900' : 'bg-gray-200'}`} />
-
-                    <div className="p-5 sm:p-6">
-                      <div className="flex items-start justify-between gap-4 mb-4">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium ${
-                              isConfirmed
-                                ? 'bg-green-50 text-green-700 border border-green-200'
-                                : 'bg-gray-100 text-gray-500 border border-gray-200'
-                            }`}>
-                              {isConfirmed
-                                ? <CheckCircle2 className="size-3" />
-                                : <XCircle className="size-3" />
-                              }
-                              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                            </span>
-                            <span className="text-xs text-gray-400 font-mono">{booking.id}</span>
-                          </div>
-                          <h3 className="text-base font-semibold text-gray-900">{workshop.title}</h3>
-                          <p className="text-sm text-gray-500 mt-0.5">by {workshop.instructor}</p>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-xs text-gray-400">Amount</p>
-                          <p className={`text-xl font-semibold ${isConfirmed ? 'text-indigo-600' : 'text-gray-400'}`}>
-                            ${booking.amount}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Info row */}
-                      <div className="flex flex-wrap gap-4 py-3 border-y border-gray-50 mb-4 text-sm text-gray-600">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="size-3.5 text-indigo-400" />
-                          {new Date(workshop.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="size-3.5 text-indigo-400" />
-                          {workshop.time}
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <DollarSign className="size-3.5 text-indigo-400" />
-                          Paid on {new Date(booking.bookingDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => navigate(`/workshop/${workshop.id}`)}
-                          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                          <Eye className="size-3.5" />
-                          View Workshop
-                        </button>
-
-                        <button
-                          onClick={() => downloadReceipt(booking.id)}
-                          className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors"
-                        >
-                          <Download className="size-3.5" />
-                          Receipt
-                        </button>
-
-                        {isConfirmed && (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <button className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-red-500 bg-red-50 hover:bg-red-100 rounded-lg transition-colors ml-auto">
-                                <X className="size-3.5" />
-                                Cancel Booking
-                              </button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="rounded-2xl">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to cancel your registration for{' '}
-                                  <strong>{workshop.title}</strong>? This action cannot be undone and your seat will be released.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel className="rounded-xl">Keep Booking</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => handleCancelBooking(booking.id)}
-                                  className="bg-red-600 hover:bg-red-700 rounded-xl"
-                                >
-                                  Yes, Cancel
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
+                    {active && (
+                      <motion.span
+                        layoutId="booking-tab"
+                        className="absolute inset-0 -z-10 rounded-lg bg-white shadow-sm ring-1 ring-gray-900/[0.06]"
+                        transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
+                      />
+                    )}
+                    {label}
+                    <span className="font-mono text-xs text-gray-400 tabular">{groups[id].length}</span>
+                  </button>
                 );
               })}
             </div>
+          </div>
+
+          <ul className="mt-6 space-y-3" role="tabpanel">
+            <AnimatePresence mode="popLayout" initial={false}>
+              {visible.map(({ booking, workshop }) => (
+                <BookingRow
+                  key={booking.id}
+                  booking={booking}
+                  workshop={workshop}
+                  onCancel={() => handleCancelBooking(booking.id)}
+                  onReceipt={() => user && downloadReceipt(booking, workshop, user)}
+                />
+              ))}
+            </AnimatePresence>
+          </ul>
+          {visible.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-gray-300 px-6 py-12 text-center text-sm text-gray-500">
+              {emptyCopy[activeTab]}
+              {activeTab === 'confirmed' && (
+                <>
+                  {' '}
+                  <Link to="/" className="text-gray-900 underline decoration-gray-300 underline-offset-4 hover:decoration-gray-900">
+                    Find a workshop
+                  </Link>
+                </>
+              )}
+            </div>
           )}
-        </AnimatePresence>
-      </div>
-    </div>
+        </>
+      )}
+    </main>
   );
 };

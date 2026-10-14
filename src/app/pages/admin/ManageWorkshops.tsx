@@ -1,312 +1,389 @@
-import { useEffect, useState, useRef } from 'react';
-import { WorkshopCover } from '../../components/WorkshopCover';
-import { motion, AnimatePresence } from 'motion/react';
-import { api } from '../../api/client.ts';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Pencil, Trash2, Plus, Search, GraduationCap, X, Calendar, DollarSign, Users as UsersIcon, ImagePlus, Link, Upload } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowUpRight, Pencil, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { api } from '../../api/client.ts';
+import type { Workshop } from '../../contexts/WorkshopContext';
+import { AdminPage, ConfirmAction, SearchField, SkeletonRows, StatRow, tableClass } from '../../components/AdminUI';
+import { btn } from '../../components/PageState';
+import { Spinner } from '../../components/AuthShell';
+import { WorkshopCover } from '../../components/WorkshopCover';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 
-interface Workshop {
-  id: string;
+type AdminWorkshop = Partial<Workshop> & Pick<Workshop, 'id' | 'title' | 'instructor'>;
+
+interface FormState {
   title: string;
   instructor: string;
-  date: string;
-  duration: string;
-  price: number;
   category: string;
-  seats: number;
-  enrolled?: number;
-  description?: string;
-  image?: string;
+  date: string;
+  time: string;
+  duration: string;
+  price: string;
+  totalSeats: string;
+  image: string;
+  skills: string;
+  description: string;
 }
 
+const emptyForm: FormState = {
+  title: '',
+  instructor: '',
+  category: '',
+  date: '',
+  time: '10:00 AM',
+  duration: '3 hours',
+  price: '',
+  totalSeats: '30',
+  image: '',
+  skills: '',
+  description: '',
+};
+
+const toForm = (w: AdminWorkshop): FormState => ({
+  title: w.title ?? '',
+  instructor: w.instructor ?? '',
+  category: w.category ?? '',
+  date: w.date ?? '',
+  time: w.time ?? '',
+  duration: w.duration ?? '',
+  price: w.price != null ? String(w.price) : '',
+  totalSeats: w.totalSeats != null ? String(w.totalSeats) : '',
+  image: w.image ?? '',
+  skills: (w.skills ?? []).join(', '),
+  description: w.description ?? '',
+});
+
+const validate = (f: FormState) => {
+  const errors: Partial<Record<keyof FormState, string>> = {};
+  if (!f.title.trim()) errors.title = 'Give the workshop a title.';
+  if (!f.instructor.trim()) errors.instructor = 'Who is teaching it?';
+  if (!f.category.trim()) errors.category = 'Pick or type a category.';
+  if (!f.date) errors.date = 'Choose a date.';
+  if (f.price === '' || Number(f.price) < 0 || Number.isNaN(Number(f.price))) errors.price = 'Enter a price (0 for free).';
+  if (!Number.isInteger(Number(f.totalSeats)) || Number(f.totalSeats) < 1) errors.totalSeats = 'At least 1 seat.';
+  return errors;
+};
+
+const inputClass =
+  'h-10 w-full rounded-lg border bg-white px-3 text-sm text-gray-900 outline-none transition-[border-color,box-shadow] placeholder:text-gray-400 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100';
+
 export const ManageWorkshops = () => {
-  const [workshops, setWorkshops] = useState<Workshop[]>([]);
-  const [filteredWorkshops, setFilteredWorkshops] = useState<Workshop[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [workshops, setWorkshops] = useState<AdminWorkshop[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editingWorkshop, setEditingWorkshop] = useState<Workshop | null>(null);
-  const [formData, setFormData] = useState<Partial<Workshop>>({});
-  const [imageTab, setImageTab] = useState<'url' | 'upload'>('url');
-  const [imagePreview, setImagePreview] = useState<string>('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => { fetchWorkshops(); }, []);
-
-  useEffect(() => {
-    const filtered = workshops.filter(w =>
-      w.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      w.instructor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      w.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredWorkshops(filtered);
-  }, [searchQuery, workshops]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<AdminWorkshop | null>(null);
+  const [form, setForm] = useState<FormState>(emptyForm);
+  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
+  const [saving, setSaving] = useState(false);
 
   const fetchWorkshops = async () => {
     try {
-      const data = await api.get('/workshops');
-      setWorkshops(data);
-      setFilteredWorkshops(data);
+      setWorkshops(await api.get('/workshops'));
     } catch (error) {
       console.error('Error fetching workshops:', error);
-      toast.error('Failed to load workshops');
+      toast.error("Couldn't load workshops");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreate = () => {
-    setEditingWorkshop(null);
-    setFormData({ title: '', instructor: '', date: '', duration: '', price: 0, category: '', seats: 30, enrolled: 0, description: '', image: '' });
-    setImagePreview('');
-    setImageTab('url');
-    setShowModal(true);
+  useEffect(() => {
+    fetchWorkshops();
+  }, []);
+
+  const categories = useMemo(() => Array.from(new Set(workshops.map(w => w.category).filter(Boolean))) as string[], [workshops]);
+
+  const visible = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return workshops
+      .filter(w => [w.title, w.instructor, w.category].some(v => v?.toLowerCase().includes(q)))
+      .sort((a, b) => new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime());
+  }, [workshops, searchQuery]);
+
+  const seatsTotal = workshops.reduce((sum, w) => sum + (w.totalSeats ?? 0), 0);
+  const seatsBooked = workshops.reduce((sum, w) => sum + ((w.totalSeats ?? 0) - (w.availableSeats ?? w.totalSeats ?? 0)), 0);
+
+  const openCreate = () => {
+    setEditing(null);
+    setForm(emptyForm);
+    setErrors({});
+    setOpen(true);
   };
 
-  const handleEdit = (workshop: Workshop) => {
-    setEditingWorkshop(workshop);
-    setFormData(workshop);
-    setImagePreview(workshop.image || '');
-    setImageTab('url');
-    setShowModal(true);
+  const openEdit = (w: AdminWorkshop) => {
+    setEditing(w);
+    setForm(toForm(w));
+    setErrors({});
+    setOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this workshop?')) return;
-    try {
-      await api.delete(`/workshops/${id}`);
-      toast.success('Workshop deleted successfully');
-      fetchWorkshops();
-    } catch (error) {
-      console.error('Error deleting workshop:', error);
-      toast.error('Failed to delete workshop');
-    }
+  const set = (key: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm(f => ({ ...f, [key]: e.target.value }));
+    if (errors[key]) setErrors(errs => ({ ...errs, [key]: undefined }));
   };
 
-  const handleImageUrlChange = (url: string) => {
-    setFormData(prev => ({ ...prev, image: url }));
-    setImagePreview(url);
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) { toast.error('Please upload a valid image file'); return; }
-    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be smaller than 5MB'); return; }
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target?.result as string;
-      setFormData(prev => ({ ...prev, image: base64 }));
-      setImagePreview(base64);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const found = validate(form);
+    setErrors(found);
+    if (Object.keys(found).length > 0) return;
+
+    const totalSeats = Number(form.totalSeats);
+    const booked = editing ? (editing.totalSeats ?? 0) - (editing.availableSeats ?? editing.totalSeats ?? 0) : 0;
+    const payload = {
+      title: form.title.trim(),
+      instructor: form.instructor.trim(),
+      category: form.category.trim(),
+      date: form.date,
+      time: form.time.trim(),
+      duration: form.duration.trim(),
+      price: Number(form.price),
+      totalSeats,
+      availableSeats: Math.max(0, totalSeats - booked),
+      image: form.image.trim(),
+      skills: form.skills
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean),
+      description: form.description.trim(),
+    };
+
+    setSaving(true);
     try {
-      if (editingWorkshop) {
-        await api.put(`/workshops/${editingWorkshop.id}`, formData);
-        toast.success('Workshop updated successfully');
+      if (editing) {
+        await api.put(`/workshops/${editing.id}`, payload);
+        toast.success('Workshop updated');
       } else {
-        const newWorkshop = { ...formData, id: Date.now().toString(), enrolled: 0 };
-        await api.post('/workshops', newWorkshop);
-        toast.success('Workshop created successfully');
+        await api.post('/workshops', {
+          ...payload,
+          id: `w-${Date.now()}`,
+          learningContent: { pdfs: [], videos: [], mcqs: [] },
+        });
+        toast.success('Workshop published');
       }
-      setShowModal(false);
+      setOpen(false);
       fetchWorkshops();
     } catch (error) {
       console.error('Error saving workshop:', error);
-      toast.error('Failed to save workshop');
+      toast.error("Couldn't save the workshop");
+    } finally {
+      setSaving(false);
     }
   };
 
+  const handleDelete = async (w: AdminWorkshop) => {
+    try {
+      await api.delete(`/workshops/${w.id}`);
+      toast.success(`Deleted ${w.title}`);
+      fetchWorkshops();
+    } catch (error) {
+      console.error('Error deleting workshop:', error);
+      toast.error("Couldn't delete that workshop");
+    }
+  };
+
+  const field = (key: keyof FormState, label: string, props: React.InputHTMLAttributes<HTMLInputElement> = {}) => (
+    <div>
+      <label htmlFor={`wf-${key}`} className="mb-1.5 block text-gray-700">
+        {label}
+      </label>
+      <input
+        id={`wf-${key}`}
+        value={form[key]}
+        onChange={set(key)}
+        aria-invalid={!!errors[key]}
+        aria-describedby={errors[key] ? `wf-${key}-error` : undefined}
+        className={`${inputClass} ${errors[key] ? 'border-red-300' : 'border-gray-200 hover:border-gray-300'}`}
+        {...props}
+      />
+      {errors[key] && (
+        <p id={`wf-${key}-error`} className="mt-1 text-xs text-red-600">
+          {errors[key]}
+        </p>
+      )}
+    </div>
+  );
+
   return (
-    <div className="min-h-[100dvh] bg-gray-50 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="bg-gray-900 p-3 rounded-xl">
-                <GraduationCap className="size-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl tracking-[-0.03em] text-gray-900">Manage Workshops</h1>
-                <p className="text-gray-600">{workshops.length} workshops total</p>
-              </div>
-            </div>
-            <Button onClick={handleCreate} className="bg-gray-900 hover:bg-indigo-700 text-white rounded-xl shadow-lg">
-              <Plus className="size-4 mr-2" /> Add Workshop
-            </Button>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-            <Input type="text" placeholder="Search workshops by title, instructor, or category..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-12 h-12 rounded-xl border-gray-200 bg-white shadow-sm" />
-          </div>
-        </motion.div>
+    <AdminPage
+      title="Workshops"
+      description="Create sessions, adjust seats and pricing, or retire old ones."
+      actions={
+        <button onClick={openCreate} className={btn.primary}>
+          <Plus className="size-4" />
+          New workshop
+        </button>
+      }
+    >
+      <StatRow
+        loading={loading}
+        items={[
+          { label: 'Workshops', value: workshops.length },
+          { label: 'Categories', value: categories.length },
+          { label: 'Seats booked', value: seatsBooked },
+          { label: 'Fill rate', value: `${seatsTotal ? Math.round((seatsBooked / seatsTotal) * 100) : 0}%` },
+        ]}
+      />
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl shadow-lg animate-pulse">
-                <div className="h-36 bg-gray-200 rounded-t-2xl mb-4" />
-                <div className="p-5"><div className="h-6 bg-gray-200 rounded w-3/4 mb-2" /><div className="h-4 bg-gray-200 rounded w-1/2" /></div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredWorkshops.map((workshop, index) => {
-              return (
-                <motion.div key={workshop.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.05 }} className="bg-white rounded-2xl overflow-hidden ring-1 ring-gray-900/[0.06] hover:shadow-xl transition-all">
-                  <div className="relative m-2 mb-0">
-                    <WorkshopCover category={workshop.category} image={workshop.image} title={workshop.title} className="h-36 rounded-xl" />
-                    <span className="absolute left-3 top-3 z-10 rounded-md bg-white/90 px-2 py-0.5 text-xs text-gray-800 backdrop-blur">{workshop.category}</span>
-                  </div>
-                  <div className="p-5">
-                    <h3 className="font-semibold text-lg text-gray-900 mb-1 line-clamp-1">{workshop.title}</h3>
-                    <p className="text-sm text-gray-600 mb-3">by {workshop.instructor}</p>
-                    <div className="space-y-1.5 mb-4 text-sm">
-                      <div className="flex items-center gap-2 text-gray-600"><Calendar className="size-4" /><span>{workshop.date}</span></div>
-                      <div className="flex items-center gap-2 text-gray-600"><DollarSign className="size-4" /><span>${workshop.price}</span></div>
-                      <div className="flex items-center gap-2 text-gray-600"><UsersIcon className="size-4" /><span>{workshop.enrolled || 0}/{workshop.seats} enrolled</span></div>
-                    </div>
-                    <div className="flex gap-2 pt-4 border-t border-gray-100">
-                      <Button onClick={() => handleEdit(workshop)} className="flex-1 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border-0"><Pencil className="size-4 mr-2" />Edit</Button>
-                      <Button onClick={() => handleDelete(workshop.id)} className="flex-1 bg-red-50 text-red-600 hover:bg-red-100 border-0"><Trash2 className="size-4 mr-2" />Delete</Button>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        )}
-
-        {filteredWorkshops.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <GraduationCap className="size-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No workshops found</p>
-          </div>
-        )}
+      <div className="mt-8 flex justify-end">
+        <SearchField value={searchQuery} onChange={setSearchQuery} placeholder="Search title, instructor, category" label="Search workshops" className="w-full sm:w-80" />
       </div>
 
-      {/* Create / Edit Modal */}
-      <AnimatePresence>
-        {showModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={(e) => e.stopPropagation()} className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-semibold text-gray-900">{editingWorkshop ? 'Edit Workshop' : 'Create New Workshop'}</h2>
-                <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-xl transition-colors"><X className="size-5" /></button>
+      <div className={tableClass.wrap}>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[52rem]">
+            <thead>
+              <tr>
+                <th className={tableClass.th}>Workshop</th>
+                <th className={tableClass.th}>Runs</th>
+                <th className={`${tableClass.th} text-right`}>Price</th>
+                <th className={tableClass.th}>Seats</th>
+                <th className={tableClass.th}>
+                  <span className="sr-only">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <SkeletonRows cols={5} />
+              ) : visible.length === 0 ? (
+                <tr className="border-t border-gray-100">
+                  <td colSpan={5} className="px-5 py-12 text-center text-sm text-gray-500">
+                    {workshops.length === 0 ? 'No workshops yet. Create the first one.' : 'No workshops match that.'}
+                  </td>
+                </tr>
+              ) : (
+                visible.map(w => {
+                  const total = w.totalSeats ?? 0;
+                  const booked = total - (w.availableSeats ?? total);
+                  const rate = total > 0 ? booked / total : 0;
+                  return (
+                    <tr key={w.id} className={tableClass.row}>
+                      <td className={`${tableClass.td} max-w-[22rem]`}>
+                        <div className="flex items-center gap-3">
+                          <WorkshopCover category={w.category ?? ''} image={w.image} title={w.title} className="size-10 shrink-0 rounded-lg" />
+                          <div className="min-w-0">
+                            <p className="truncate text-sm text-gray-900">{w.title}</p>
+                            <p className="truncate text-xs text-gray-500">
+                              {w.instructor}
+                              {w.category && <> · {w.category}</>}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className={`${tableClass.td} whitespace-nowrap text-sm text-gray-600`}>
+                        {w.date ? new Date(w.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'TBD'}
+                        {w.time && <span className="text-gray-400">, {w.time}</span>}
+                      </td>
+                      <td className={`${tableClass.td} text-right font-mono text-sm text-gray-900 tabular`}>${w.price ?? 0}</td>
+                      <td className={`${tableClass.td} w-44`}>
+                        <p className="font-mono text-xs text-gray-600 tabular">
+                          {booked}/{total}
+                        </p>
+                        <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-gray-100">
+                          <div className={`h-full rounded-full ${rate >= 0.8 ? 'bg-indigo-600' : 'bg-gray-900'}`} style={{ width: `${rate * 100}%` }} />
+                        </div>
+                      </td>
+                      <td className={`${tableClass.td} text-right`}>
+                        <div className="flex justify-end gap-1">
+                          <Link to={`/workshop/${w.id}`} aria-label={`View ${w.title} on the student site`} className={tableClass.iconButton}>
+                            <ArrowUpRight className="size-4" strokeWidth={1.75} />
+                          </Link>
+                          <button onClick={() => openEdit(w)} aria-label={`Edit ${w.title}`} className={tableClass.iconButton}>
+                            <Pencil className="size-4" strokeWidth={1.75} />
+                          </button>
+                          <ConfirmAction
+                            title={`Delete ${w.title}?`}
+                            description={
+                              booked > 0
+                                ? `${booked} ${booked === 1 ? 'student has' : 'students have'} booked this. Their registrations stay on record, but the workshop page will disappear.`
+                                : 'It will disappear from the catalog immediately.'
+                            }
+                            confirmLabel="Delete workshop"
+                            onConfirm={() => handleDelete(w)}
+                            trigger={
+                              <button aria-label={`Delete ${w.title}`} className={tableClass.dangerButton}>
+                                <Trash2 className="size-4" strokeWidth={1.75} />
+                              </button>
+                            }
+                          />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <Dialog open={open} onOpenChange={next => !saving && setOpen(next)}>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-2xl sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-xl tracking-[-0.02em]">{editing ? 'Edit workshop' : 'New workshop'}</DialogTitle>
+            <DialogDescription>
+              {editing ? 'Changes show up in the catalog as soon as you save.' : 'It goes live in the catalog as soon as you publish.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSave} noValidate className="mt-2 space-y-4">
+            {field('title', 'Title', { placeholder: 'e.g. Practical TypeScript for React' })}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {field('instructor', 'Instructor', { placeholder: 'Full name' })}
+              <div>
+                {field('category', 'Category', { placeholder: 'e.g. Web Development', list: 'wf-categories' })}
+                <datalist id="wf-categories">
+                  {categories.map(c => (
+                    <option key={c} value={c} />
+                  ))}
+                </datalist>
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+              {field('date', 'Date', { type: 'date' })}
+              {field('time', 'Start time', { placeholder: '10:00 AM' })}
+              <div className="col-span-2 sm:col-span-1">{field('duration', 'Duration', { placeholder: '3 hours' })}</div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              {field('price', 'Price (USD)', { type: 'number', min: 0, step: '0.01', inputMode: 'decimal', placeholder: '49.99' })}
+              {field('totalSeats', 'Total seats', { type: 'number', min: 1, step: 1, inputMode: 'numeric' })}
+            </div>
+            {editing && (
+              <p className="-mt-2 text-xs text-gray-500">
+                {(editing.totalSeats ?? 0) - (editing.availableSeats ?? editing.totalSeats ?? 0)} seats already booked; open seats are recalculated from the total.
+              </p>
+            )}
+            {field('skills', 'Skills covered', { placeholder: 'Comma separated, e.g. Hooks, Testing, Performance' })}
+            {field('image', 'Cover image', { placeholder: 'Image URL, or a few keywords for a stock photo' })}
+            <div>
+              <label htmlFor="wf-description" className="mb-1.5 block text-gray-700">
+                Description
+              </label>
+              <textarea
+                id="wf-description"
+                value={form.description}
+                onChange={set('description')}
+                rows={4}
+                placeholder="What will people build or learn?"
+                className={`${inputClass} h-auto resize-y border-gray-200 py-2.5 hover:border-gray-300`}
+              />
+            </div>
 
-              <form onSubmit={handleSubmit} className="space-y-4">
-
-                {/* ── Image Section ── */}
-                <div>
-                  <Label className="mb-2 block">Workshop Image</Label>
-
-                  {/* URL / Upload tabs */}
-                  <div className="flex gap-1 p-1 bg-gray-100 rounded-xl mb-3 w-fit">
-                    <button type="button" onClick={() => setImageTab('url')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${imageTab === 'url' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                      <Link className="size-3.5" /> URL
-                    </button>
-                    <button type="button" onClick={() => setImageTab('upload')} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${imageTab === 'upload' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
-                      <Upload className="size-3.5" /> Upload
-                    </button>
-                  </div>
-
-                  {imageTab === 'url' ? (
-                    <Input
-                      type="url"
-                      value={formData.image?.startsWith('data:') ? '' : (formData.image || '')}
-                      onChange={(e) => handleImageUrlChange(e.target.value)}
-                      placeholder="https://example.com/workshop-image.jpg"
-                      className="mb-3"
-                    />
-                  ) : (
-                    <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center cursor-pointer hover:border-purple-400 hover:bg-purple-50/50 transition-all mb-3">
-                      <Upload className="size-8 text-gray-300 mx-auto mb-2" />
-                      <p className="text-sm text-gray-600 font-medium">Click to upload image</p>
-                      <p className="text-xs text-gray-400 mt-1">PNG, JPG, WEBP · max 5MB</p>
-                      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
-                    </div>
-                  )}
-
-                  {/* Preview */}
-                  {imagePreview ? (
-                    <div className="relative rounded-xl overflow-hidden h-44 bg-gray-100">
-                      <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" onError={() => setImagePreview('')} />
-                      <button type="button" onClick={() => { setImagePreview(''); setFormData(prev => ({ ...prev, image: '' })); }} className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors">
-                        <X className="size-3.5" />
-                      </button>
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/50 to-transparent px-3 py-2">
-                        <p className="text-white text-xs">Preview</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="rounded-xl h-44 bg-gray-50 border-2 border-dashed border-gray-200 flex items-center justify-center">
-                      <div className="text-center"><ImagePlus className="size-10 text-gray-300 mx-auto mb-2" /><p className="text-sm text-gray-400">No image selected</p></div>
-                    </div>
-                  )}
-                </div>
-
-                {/* ── Fields ── */}
-                <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input id="title" value={formData.title || ''} onChange={(e) => setFormData({ ...formData, title: e.target.value })} placeholder="Workshop title" required className="mt-1" />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="instructor">Instructor</Label>
-                    <Input id="instructor" value={formData.instructor || ''} onChange={(e) => setFormData({ ...formData, instructor: e.target.value })} placeholder="Instructor name" required className="mt-1" />
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Input id="category" value={formData.category || ''} onChange={(e) => setFormData({ ...formData, category: e.target.value })} placeholder="e.g., Design" required className="mt-1" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="date">Date</Label>
-                    <Input id="date" value={formData.date || ''} onChange={(e) => setFormData({ ...formData, date: e.target.value })} placeholder="e.g., Apr 15, 2026" required className="mt-1" />
-                  </div>
-                  <div>
-                    <Label htmlFor="duration">Duration</Label>
-                    <Input id="duration" value={formData.duration || ''} onChange={(e) => setFormData({ ...formData, duration: e.target.value })} placeholder="e.g., 3 hours" required className="mt-1" />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="price">Price (₹)</Label>
-                    <Input id="price" type="number" value={formData.price || ''} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })} placeholder="999" required className="mt-1" />
-                  </div>
-                  <div>
-                    <Label htmlFor="seats">Total Seats</Label>
-                    <Input id="seats" type="number" value={formData.seats || ''} onChange={(e) => setFormData({ ...formData, seats: parseInt(e.target.value) })} placeholder="30" required className="mt-1" />
-                  </div>
-                </div>
-
-                <div>
-                  <Label htmlFor="description">Description</Label>
-                  <textarea id="description" value={formData.description || ''} onChange={(e) => setFormData({ ...formData, description: e.target.value })} placeholder="Workshop description..." rows={4} className="w-full mt-1 px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500" />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <Button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-gray-100 text-gray-700 hover:bg-gray-200 border-0">Cancel</Button>
-                  <Button type="submit" className="flex-1 bg-gray-900 hover:bg-indigo-700 text-white border-0">{editingWorkshop ? 'Update' : 'Create'} Workshop</Button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            <div className="flex flex-col-reverse gap-2 border-t border-gray-100 pt-4 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setOpen(false)} disabled={saving} className={btn.ghost}>
+                Cancel
+              </button>
+              <button type="submit" disabled={saving} className={btn.primary}>
+                {saving && <Spinner />}
+                {editing ? 'Save changes' : 'Publish workshop'}
+              </button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </AdminPage>
   );
 };

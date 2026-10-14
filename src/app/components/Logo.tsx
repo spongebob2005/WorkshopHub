@@ -10,14 +10,17 @@ interface LogoProps {
 export const LogoMark = ({ className = 'size-8' }: { className?: string }) => (
   <svg viewBox="0 0 32 32" className={className} aria-hidden>
     <rect width="32" height="32" rx="8" fill="currentColor" />
-    <path
-      d="M8 10l3.2 12L16 13l4.8 9L24 10"
-      fill="none"
-      stroke="var(--color-indigo-300)"
-      strokeWidth="2.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
+    <g fill="var(--color-gray-400)">
+      <rect x="8.4" y="7.4" width="4" height="3.6" rx="1" />
+      <rect x="14" y="7.4" width="4" height="3.6" rx="1" />
+      <rect x="8.4" y="21" width="4" height="3.6" rx="1" />
+      <rect x="14" y="21" width="4" height="3.6" rx="1" />
+      <rect x="19.6" y="21" width="4" height="3.6" rx="1" />
+    </g>
+    <g fill="var(--color-indigo-300)">
+      <rect x="19.6" y="7.4" width="4" height="3.6" rx="1" />
+      <rect x="7.4" y="13" width="17.2" height="6" rx="3" />
+    </g>
   </svg>
 );
 
