@@ -75,10 +75,9 @@ ALLOWED_ORIGINS=http://localhost:5173
 # Seeded on first start if no admin exists
 DEFAULT_ADMIN_EMAIL=admin@workshophub.com
 DEFAULT_ADMIN_PASSWORD=admin123
-
-# Frontend: where the API lives (defaults to http://localhost:4000/api)
-VITE_API_BASE_URL=http://localhost:4000/api
 ```
+
+The frontend calls `/api` on its own origin. In dev, Vite proxies `/api` to `http://localhost:4000`; set `VITE_API_BASE_URL` only if the API lives somewhere else.
 
 `.env` files are git-ignored. Never commit real credentials.
 
@@ -101,37 +100,37 @@ If the `workshops` collection is empty, the catalog shows eight sample workshops
 
 ## Scripts
 
-| Command              | What it does                          |
-| -------------------- | ------------------------------------- |
-| `npm run dev`        | Start the Vite dev server             |
-| `npm run dev:server` | Start the Express API                 |
-| `npm run build`      | Production build into `dist/`         |
-| `npm run preview`    | Serve the production build locally    |
+| Command                | What it does                       |
+| ---------------------- | ---------------------------------- |
+| `npm run dev`        | Start the Vite dev server          |
+| `npm run dev:server` | Start the Express API              |
+| `npm run build`      | Production build into `dist/`    |
+| `npm run preview`    | Serve the production build locally |
 
 ## API
 
 All routes are prefixed with `/api`. 🔒 marks routes that need an admin JWT (`Authorization: Bearer <token>`).
 
-| Method   | Route                | Purpose                                   |
-| -------- | -------------------- | ----------------------------------------- |
-| `GET`    | `/health`            | Health check                              |
-| `POST`   | `/login`             | Sign in, returns `{ user, token }`        |
-| `POST`   | `/users`             | Register a student                        |
-| `GET`    | `/users`             | 🔒 List users (passwords stripped)        |
-| `PUT`    | `/users/:email`      | 🔒 Update a user (e.g. role)              |
-| `DELETE` | `/users/:email`      | 🔒 Delete a user                          |
-| `GET`    | `/workshops`         | List workshops                            |
-| `POST`   | `/workshops`         | 🔒 Create a workshop                      |
-| `PUT`    | `/workshops/:id`     | 🔒 Update a workshop                      |
-| `DELETE` | `/workshops/:id`     | 🔒 Delete a workshop                      |
-| `POST`   | `/workshops/init`    | 🔒 Seed workshops if the collection is empty |
-| `GET`    | `/bookings`          | List bookings                             |
-| `POST`   | `/bookings`          | Create or update a booking (adjusts seats) |
-| `DELETE` | `/bookings/:id`      | 🔒 Delete a booking                       |
-| `GET`    | `/payments`          | List payment records                      |
-| `POST`   | `/payments`          | Record a (simulated) payment              |
-| `GET`    | `/admin/stats`       | 🔒 Totals for the admin overview          |
-| `GET`    | `/events`            | Activity log (bookings, payments, etc.)   |
+| Method     | Route               | Purpose                                      |
+| ---------- | ------------------- | -------------------------------------------- |
+| `GET`    | `/health`         | Health check                                 |
+| `POST`   | `/login`          | Sign in, returns `{ user, token }`         |
+| `POST`   | `/users`          | Register a student                           |
+| `GET`    | `/users`          | 🔒 List users (passwords stripped)           |
+| `PUT`    | `/users/:email`   | 🔒 Update a user (e.g. role)                 |
+| `DELETE` | `/users/:email`   | 🔒 Delete a user                             |
+| `GET`    | `/workshops`      | List workshops                               |
+| `POST`   | `/workshops`      | 🔒 Create a workshop                         |
+| `PUT`    | `/workshops/:id`  | 🔒 Update a workshop                         |
+| `DELETE` | `/workshops/:id`  | 🔒 Delete a workshop                         |
+| `POST`   | `/workshops/init` | 🔒 Seed workshops if the collection is empty |
+| `GET`    | `/bookings`       | List bookings                                |
+| `POST`   | `/bookings`       | Create or update a booking (adjusts seats)   |
+| `DELETE` | `/bookings/:id`   | 🔒 Delete a booking                          |
+| `GET`    | `/payments`       | List payment records                         |
+| `POST`   | `/payments`       | Record a (simulated) payment                 |
+| `GET`    | `/admin/stats`    | 🔒 Totals for the admin overview             |
+| `GET`    | `/events`         | Activity log (bookings, payments, etc.)      |
 
 MongoDB collections (`users`, `workshops`, `bookings`, `payments`, `events`) are created automatically.
 
@@ -141,8 +140,11 @@ MongoDB collections (`users`, `workshops`, `bookings`, `payments`, `events`) are
 .
 ├── .github/assets/        Logo and brand files used by this README
 ├── public/                Favicon and app icons (copied into the build as-is)
+├── api/
+│   └── index.js           Vercel Function entry, serves the Express app at /api/*
 ├── server/
-│   └── index.js           Express API, auth, MongoDB access
+│   ├── app.js             Express API, auth, MongoDB access
+│   └── index.js           Local dev server (npm run dev:server)
 ├── src/
 │   ├── app/
 │   │   ├── api/           Fetch wrapper that attaches the JWT
@@ -153,12 +155,8 @@ MongoDB collections (`users`, `workshops`, `bookings`, `payments`, `events`) are
 │   │   └── routes.tsx     Route table and layouts
 │   └── styles/            Tailwind theme: zinc neutrals, pine accent, Geist
 ├── index.html
-└── vercel.json            Build settings and SPA rewrites
+└── vercel.json            Build settings, /api and SPA rewrites
 ```
-
-## Design
-
-The UI uses one cool neutral (zinc) and one accent (pine green), set in Geist and Geist Mono. Numbers use tabular figures, and motion respects `prefers-reduced-motion`. The same brand mark is used for the favicon, the navbar and the logo above. Original brand exports are in [`.github/assets/brand`](.github/assets/brand).
 
 <p align="center">
   <img src=".github/assets/brand/app-icon-sheet.png" alt="WorkshopHub app icon at 160, 96, 64, 32 and 16 px, shown in a browser tab and on a home screen" width="720" />
@@ -166,7 +164,11 @@ The UI uses one cool neutral (zinc) and one accent (pine green), set in Geist an
 
 ## Deployment
 
-The repo is set up for Vercel (`vercel.json` sets the build command, the `dist` output folder and SPA rewrites). Import the repository in Vercel, add `VITE_API_BASE_URL` pointing at your deployed API, and deploy. Host the Express API anywhere that runs Node and set its environment variables there.
+Frontend and API deploy together to Vercel. The Vite build is served from `dist`, and `api/index.js` runs the Express app as a Vercel Function for every `/api/*` request (see `vercel.json`).
+
+1. Add `MONGODB_URI`, `MONGODB_DB`, `JWT_SECRET` and, optionally, `DEFAULT_ADMIN_EMAIL` / `DEFAULT_ADMIN_PASSWORD` to the Vercel project (`vercel env add`).
+2. In MongoDB Atlas, open **Network Access** and allow `0.0.0.0/0`, because Vercel Functions don't have fixed IPs.
+3. Run `vercel deploy --prod`.
 
 ## Limitations
 

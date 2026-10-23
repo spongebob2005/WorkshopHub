@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { api } from '../api/client';
+import { useAuth } from './AuthContext';
 
 export interface LearningContent {
   pdfs: { title: string; url: string }[];
@@ -312,6 +313,7 @@ export const WorkshopProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -326,12 +328,6 @@ export const WorkshopProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           await api.post('/workshops/init', { workshops: INITIAL_WORKSHOPS });
           setWorkshops(INITIAL_WORKSHOPS);
         }
-
-        // Fetch bookings
-        const fetchedBookings = await api.get('/bookings');
-        if (fetchedBookings) {
-          setBookings(fetchedBookings);
-        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -341,6 +337,17 @@ export const WorkshopProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     fetchData();
   }, []);
+
+  // Bookings need a token (students get their own, admins get all), so reload them whenever the user changes.
+  useEffect(() => {
+    if (!user) {
+      setBookings([]);
+      return;
+    }
+    api.get('/bookings')
+      .then((fetchedBookings) => setBookings(fetchedBookings ?? []))
+      .catch((error) => console.error('Error fetching bookings:', error));
+  }, [user?.id]);
 
   const addBooking = async (booking: Booking) => {
     const newBookings = [...bookings, booking];
@@ -362,7 +369,7 @@ export const WorkshopProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       
       try {
         await api.post('/bookings', updatedBooking);
-        await updateSeatAvailability(booking.workshopId, 1);
+        await updateSeatAvailability(booking.workshopId, -1);
       } catch (e) {
         console.error('Failed to cancel booking on server', e);
       }

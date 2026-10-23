@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useWorkshops } from '../contexts/WorkshopContext';
 import { useAuth } from '../contexts/AuthContext';
+import { api } from '../api/client';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check, FileText, Link2, Lock, PlayCircle, ListChecks } from 'lucide-react';
 import { WorkshopCover } from '../components/WorkshopCover';
 import { seatStatus } from '../components/WorkshopCard';
@@ -50,10 +51,18 @@ const MaterialRow = ({ icon: Icon, title, meta, action, unlocked, onOpen }: Mate
 export const WorkshopDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getWorkshopById, getBookingsByWorkshop, loading: workshopsLoading } = useWorkshops();
+  const { getWorkshopById, loading: workshopsLoading } = useWorkshops();
   const { isAuthenticated, user } = useAuth();
   const [tab, setTab] = useState<Tab>('overview');
+  const [registeredUsers, setRegisteredUsers] = useState<{ id: string; name: string }[]>([]);
   const workshop = getWorkshopById(id!);
+
+  useEffect(() => {
+    if (!id) return;
+    api.get(`/workshops/${id}/attendees`)
+      .then(setRegisteredUsers)
+      .catch((error) => console.error('Error fetching attendees:', error));
+  }, [id]);
 
   if (workshopsLoading) return <PageLoader />;
 
@@ -71,10 +80,6 @@ export const WorkshopDetails = () => {
       />
     );
   }
-
-  const registeredUsers = getBookingsByWorkshop(workshop.id)
-    .filter(booking => booking.status === 'confirmed')
-    .map(booking => ({ id: booking.userId, name: booking.userName || 'Anonymous attendee' }));
 
   const isUserRegistered = isAuthenticated && registeredUsers.some(u => u.id === user?.id);
   const soldOut = workshop.availableSeats === 0;

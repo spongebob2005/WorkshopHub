@@ -143,7 +143,7 @@ export const Payment = () => {
             >
               <div className="absolute inset-0 flex flex-col justify-between rounded-2xl bg-gray-900 p-5 text-white shadow-[0_20px_40px_-20px_oklch(0.2_0.01_286/0.6)]" style={{ backfaceVisibility: 'hidden' }}>
                 <div className="flex items-center justify-between">
-                  <span className="h-7 w-9 rounded-md bg-gradient-to-br from-indigo-200 to-indigo-400 opacity-80" />
+                  <span className="h-7 w-9 rounded-md bg-indigo-300" />
                   <span className="text-xs font-semibold tracking-widest text-white/80">{brand ?? ''}</span>
                 </div>
                 <div>

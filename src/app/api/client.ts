@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:4000/api";
+// Same-origin by default: Vercel serves the API at /api, and the Vite dev server proxies it to Express.
+const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 const getHeaders = () => {
   const token = localStorage.getItem('authToken');

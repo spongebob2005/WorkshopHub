@@ -1,9 +1,12 @@
 {
-  "installCommand": "bun install",
-  "buildCommand": "bun run build",
-  "devCommand": "bun run dev",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api"
+    },
     {
       "source": "/(.*)",
       "destination": "/index.html"
