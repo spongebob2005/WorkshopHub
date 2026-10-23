@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useWorkshops } from '../contexts/WorkshopContext';
+import { useWorkshops, type LearningContent } from '../contexts/WorkshopContext';
 import { useAuth } from '../contexts/AuthContext';
 import { api } from '../api/client';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check, FileText, Link2, Lock, PlayCircle, ListChecks } from 'lucide-react';
@@ -55,6 +55,8 @@ export const WorkshopDetails = () => {
   const { isAuthenticated, user } = useAuth();
   const [tab, setTab] = useState<Tab>('overview');
   const [registeredUsers, setRegisteredUsers] = useState<{ id: string; name: string }[]>([]);
+  // Material links only come from the server once this user has paid (or is an admin).
+  const [unlockedContent, setUnlockedContent] = useState<LearningContent | null>(null);
   const workshop = getWorkshopById(id!);
 
   useEffect(() => {
@@ -63,6 +65,15 @@ export const WorkshopDetails = () => {
       .then(setRegisteredUsers)
       .catch((error) => console.error('Error fetching attendees:', error));
   }, [id]);
+
+  useEffect(() => {
+    setUnlockedContent(null);
+    if (!id || !isAuthenticated) return;
+    // A 403 just means no paid booking yet, so the materials stay locked.
+    api.get(`/workshops/${id}/content`)
+      .then(setUnlockedContent)
+      .catch(() => {});
+  }, [id, isAuthenticated, user?.id]);
 
   if (workshopsLoading) return <PageLoader />;
 
@@ -86,7 +97,8 @@ export const WorkshopDetails = () => {
   const seatsBooked = workshop.totalSeats - workshop.availableSeats;
   const filled = workshop.totalSeats > 0 ? seatsBooked / workshop.totalSeats : 1;
   const status = seatStatus(workshop.availableSeats, workshop.totalSeats);
-  const content = workshop.learningContent;
+  const materialsUnlocked = unlockedContent !== null;
+  const content = unlockedContent ?? workshop.learningContent;
   const materialCount = (content?.pdfs?.length ?? 0) + (content?.videos?.length ?? 0) + (content?.mcqs?.length ?? 0);
 
   const handleRegister = () => {
@@ -225,10 +237,10 @@ export const WorkshopDetails = () => {
 
             {tab === 'materials' && (
               <div className="rounded-2xl bg-white p-2 ring-1 ring-gray-900/[0.06]">
-                {!isUserRegistered && (
+                {!materialsUnlocked && (
                   <div className="m-1 mb-2 flex items-center gap-3 rounded-xl bg-gray-50 px-4 py-3 text-sm text-gray-600">
                     <Lock className="size-4 shrink-0 text-gray-400" />
-                    Materials unlock once you've booked a seat.
+                    Readings, videos and quizzes unlock once you've paid for a seat.
                   </div>
                 )}
                 {[
@@ -263,7 +275,7 @@ export const WorkshopDetails = () => {
                       <h3 className="px-3 pb-1 text-xs text-gray-500">{group.heading}</h3>
                       <ul>
                         {group.rows.map(row => (
-                          <MaterialRow key={row.title} {...row} unlocked={isUserRegistered} />
+                          <MaterialRow key={row.title} {...row} unlocked={materialsUnlocked} />
                         ))}
                       </ul>
                     </section>

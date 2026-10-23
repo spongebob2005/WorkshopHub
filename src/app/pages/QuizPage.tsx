@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, ArrowRight, Check, RotateCcw, X } from 'lucide-react';
 import { PageLoader, PageMessage, btn } from '../components/PageState';
+import { api } from '../api/client';
 
 const ease = [0.22, 1, 0.36, 1] as const;
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -24,58 +25,35 @@ interface QuizAnswer {
   isCorrect: boolean;
 }
 
-// Sample quiz questions - replace with real quiz data from the workshop when available
-const quizData: QuizQuestion[] = [
-  {
-    id: 1,
-    question: 'What is React primarily used for?',
-    options: ['Database management', 'Building user interfaces', 'Server-side programming', 'Network security'],
-    correctAnswer: 1,
-    explanation: 'React is a JavaScript library for building user interfaces, particularly for single-page applications.',
-  },
-  {
-    id: 2,
-    question: 'Which hook is used for managing state in functional components?',
-    options: ['useEffect', 'useContext', 'useState', 'useReducer'],
-    correctAnswer: 2,
-    explanation: 'useState is the primary hook for managing local state in React functional components.',
-  },
-  {
-    id: 3,
-    question: 'What does JSX stand for?',
-    options: ['JavaScript XML', 'Java Syntax Extension', 'JSON XML', 'JavaScript Extension'],
-    correctAnswer: 0,
-    explanation: 'JSX stands for JavaScript XML, a syntax extension that allows you to write HTML-like code in JavaScript.',
-  },
-  {
-    id: 4,
-    question: 'What is the virtual DOM in React?',
-    options: ['A physical copy of the DOM', 'A lightweight copy of the real DOM kept in memory', 'A browser feature', 'A CSS framework'],
-    correctAnswer: 1,
-    explanation: 'The virtual DOM is a lightweight representation of the real DOM that React uses to optimize updates.',
-  },
-  {
-    id: 5,
-    question: 'Which method is used to update state in a class component?',
-    options: ['this.updateState()', 'this.setState()', 'this.changeState()', 'this.modifyState()'],
-    correctAnswer: 1,
-    explanation: 'this.setState() is the method used to update state in React class components.',
-  },
-];
-
 const formatTime = (seconds: number) =>
   `${Math.floor(seconds / 60).toString().padStart(2, '0')}:${(seconds % 60).toString().padStart(2, '0')}`;
 
 export const QuizPage = () => {
   const { workshopId, quizIndex } = useParams<{ workshopId: string; quizIndex: string }>();
-  const { getWorkshopById, getBookingsByWorkshop, loading } = useWorkshops();
+  const { getWorkshopById, loading } = useWorkshops();
   const { user, isAuthenticated } = useAuth();
   const workshop = getWorkshopById(workshopId!);
 
-  const isUserRegistered =
-    isAuthenticated &&
-    !!workshop &&
-    getBookingsByWorkshop(workshop.id).some(b => b.status === 'confirmed' && b.userId === user?.id);
+  // Questions come from the server, which only sends them to paid attendees and admins.
+  const [quiz, setQuiz] = useState<{ title: string; questions: QuizQuestion[] } | null>(null);
+  const [quizStatus, setQuizStatus] = useState<'loading' | 'ready' | 'locked' | 'missing'>('loading');
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setQuizStatus('locked');
+      return;
+    }
+    setQuizStatus('loading');
+    api.get(`/workshops/${workshopId}/quizzes/${quizIndex}`)
+      .then(data => {
+        setQuiz(data);
+        setQuizStatus('ready');
+      })
+      .catch((error: Error) => setQuizStatus(/status 40[13]/.test(error.message) ? 'locked' : 'missing'));
+  }, [workshopId, quizIndex, isAuthenticated, user?.id]);
+
+  const quizData = quiz?.questions ?? [];
+  const isUserRegistered = quizStatus === 'ready';
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<QuizAnswer[]>([]);
@@ -84,7 +62,7 @@ export const QuizPage = () => {
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [timeElapsed, setTimeElapsed] = useState(0);
 
-  const quizTitle = workshop?.learningContent?.mcqs?.[Number(quizIndex)]?.title || 'Workshop quiz';
+  const quizTitle = quiz?.title || workshop?.learningContent?.mcqs?.[Number(quizIndex)]?.title || 'Workshop quiz';
   const currentQuestion = quizData[currentQuestionIndex];
   const totalQuestions = quizData.length;
   const isLast = currentQuestionIndex === totalQuestions - 1;
@@ -145,7 +123,7 @@ export const QuizPage = () => {
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  if (loading) return <PageLoader />;
+  if (loading || quizStatus === 'loading') return <PageLoader />;
 
   if (!workshop) {
     return (
@@ -162,14 +140,29 @@ export const QuizPage = () => {
     );
   }
 
+  if (quizStatus === 'missing') {
+    return (
+      <PageMessage
+        eyebrow="Quiz"
+        title="This quiz isn't ready yet."
+        body="The instructor hasn't added questions for it. Check back closer to the session."
+        actions={
+          <Link to={`/workshop/${workshopId}`} className={btn.primary}>
+            Back to workshop
+          </Link>
+        }
+      />
+    );
+  }
+
   if (!isUserRegistered) {
     return (
       <PageMessage
         eyebrow="Members only"
-        title="Book a seat to take this quiz."
+        title="Pay for a seat to take this quiz."
         body={
           <>
-            Quizzes for <span className="text-gray-900">{workshop.title}</span> are part of the course materials, which unlock once you've booked.
+            Quizzes for <span className="text-gray-900">{workshop.title}</span> are part of the course materials, which unlock once you've paid for a seat.
           </>
         }
         actions={

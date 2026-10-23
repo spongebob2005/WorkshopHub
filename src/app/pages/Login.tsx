@@ -102,7 +102,7 @@ export const Login = () => {
               id="email"
               type="email"
               autoComplete="email"
-              placeholder={loginType === 'admin' ? 'admin@workshophub.com' : 'you@college.edu'}
+              placeholder="you@college.edu"
               value={email}
               onChange={e => setEmail(e.target.value)}
               aria-invalid={!!error && !email}
@@ -156,16 +156,12 @@ export const Login = () => {
         </button>
       </form>
 
-      {loginType === 'student' ? (
+      {loginType === 'student' && (
         <p className="mt-8 text-sm text-gray-500">
           New here?{' '}
           <Link to="/register" className="font-medium text-gray-900 underline decoration-indigo-300 decoration-2 underline-offset-4 hover:decoration-indigo-600">
             Create a free account
           </Link>
-        </p>
-      ) : (
-        <p className="mt-8 rounded-lg border border-dashed border-gray-300 px-3.5 py-3 font-mono text-xs text-gray-500">
-          demo · admin@workshophub.com / admin123
         </p>
       )}
     </AuthShell>

@@ -6,14 +6,15 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import Joi from "joi";
 import rateLimit from "express-rate-limit";
+import { getQuiz } from "./quizzes.js";
 
 dotenv.config();
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const DB_NAME = process.env.MONGODB_DB ?? "workshophub";
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-in-production";
-const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL || 'admin@workshophub.com';
-const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || 'admin123';
+const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL;
+const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD;
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
 
 if (!MONGODB_URI) {
@@ -77,6 +78,10 @@ const ensureAdminUser = async () => {
   const users = await getCollection('users');
   const existingAdmin = await users.findOne({ role: 'admin' });
   if (existingAdmin) return;
+  if (!DEFAULT_ADMIN_EMAIL || !DEFAULT_ADMIN_PASSWORD) {
+    console.warn('No admin user exists; set DEFAULT_ADMIN_EMAIL and DEFAULT_ADMIN_PASSWORD to create one.');
+    return;
+  }
 
   const adminUser = {
     id: `admin-${Date.now()}`,
@@ -304,10 +309,46 @@ app.delete("/api/users/:email", authenticateToken, requireAdmin, async (req, res
   }
 });
 
+// The public catalog keeps material titles so the locked Materials tab can list them,
+// but links are only served by /api/workshops/:id/content to paid attendees.
+// Quiz cards show the real size of each question set, not the number stored with the workshop.
+const withQuizCounts = (workshopId, mcqs = []) =>
+  mcqs.map((mcq, index) => ({ ...mcq, questions: getQuiz(workshopId, index)?.length ?? mcq.questions }));
+
+const withoutContentLinks = ({ learningContent, ...workshop }) => ({
+  ...workshop,
+  learningContent: {
+    pdfs: (learningContent?.pdfs ?? []).map(({ title }) => ({ title })),
+    videos: (learningContent?.videos ?? []).map(({ title, duration }) => ({ title, duration })),
+    mcqs: withQuizCounts(workshop.id, learningContent?.mcqs),
+  },
+});
+
+// Shuffled per request so the right answer isn't always in the same position.
+const shuffleOptions = ({ options, correctAnswer, ...question }) => {
+  const order = options.map((_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return { ...question, options: order.map((i) => options[i]), correctAnswer: order.indexOf(correctAnswer) };
+};
+
+const hasPaidAccess = async (user, workshopId) => {
+  if (user.role === "admin") return true;
+  const paidBooking = await (await getCollection("bookings")).findOne({
+    workshopId,
+    userId: user.id,
+    status: "confirmed",
+    paymentId: { $exists: true, $ne: "" },
+  });
+  return !!paidBooking;
+};
+
 app.get("/api/workshops", async (_req, res) => {
   try {
     const workshops = await (await getCollection("workshops")).find({}).toArray();
-    res.json(workshops);
+    res.json(workshops.map(withoutContentLinks));
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: String(error) });
@@ -364,6 +405,51 @@ app.post("/api/workshops/init", authenticateToken, requireAdmin, async (req, res
       await (await getCollection("workshops")).insertMany(workshops.map((workshop) => ({ ...workshop })));
     }
     res.json({ success: true, count: workshops.length });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: String(error) });
+  }
+});
+
+// Full materials, links included: admins, or students with a confirmed, paid booking for this workshop.
+app.get("/api/workshops/:id/content", authenticateToken, async (req, res) => {
+  try {
+    const workshop = await (await getCollection("workshops")).findOne({ id: req.params.id });
+    if (!workshop) {
+      return res.status(404).json({ error: "Workshop not found" });
+    }
+
+    if (!(await hasPaidAccess(req.user, req.params.id))) {
+      return res.status(403).json({ error: "Pay for this workshop to unlock its materials" });
+    }
+
+    const content = workshop.learningContent ?? { pdfs: [], videos: [], mcqs: [] };
+    res.json({ ...content, mcqs: withQuizCounts(workshop.id, content.mcqs) });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: String(error) });
+  }
+});
+
+// One quiz's questions (answers included), under the same paid-booking rule as the other materials.
+app.get("/api/workshops/:id/quizzes/:index", authenticateToken, async (req, res) => {
+  try {
+    const workshop = await (await getCollection("workshops")).findOne({ id: req.params.id });
+    const index = Number(req.params.index);
+    const mcq = workshop?.learningContent?.mcqs?.[index];
+    if (!mcq) {
+      return res.status(404).json({ error: "Quiz not found" });
+    }
+
+    if (!(await hasPaidAccess(req.user, req.params.id))) {
+      return res.status(403).json({ error: "Pay for this workshop to unlock its quizzes" });
+    }
+
+    const questions = getQuiz(req.params.id, index);
+    if (!questions) {
+      return res.status(404).json({ error: "This quiz has no questions yet" });
+    }
+    res.json({ title: mcq.title, questions: questions.map((question, i) => ({ id: i + 1, ...shuffleOptions(question) })) });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: String(error) });

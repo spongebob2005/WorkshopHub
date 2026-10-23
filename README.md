@@ -73,8 +73,8 @@ JWT_SECRET=change-me-to-a-long-random-string
 ALLOWED_ORIGINS=http://localhost:5173
 
 # Seeded on first start if no admin exists
-DEFAULT_ADMIN_EMAIL=admin@workshophub.com
-DEFAULT_ADMIN_PASSWORD=admin123
+DEFAULT_ADMIN_EMAIL=<admin-email>
+DEFAULT_ADMIN_PASSWORD=<strong-password>
 ```
 
 The frontend calls `/api` on its own origin. In dev, Vite proxies `/api` to `http://localhost:4000`; set `VITE_API_BASE_URL` only if the API lives somewhere else.
@@ -90,7 +90,7 @@ npm run dev:server   # Express API on http://localhost:4000
 npm run dev          # Vite dev server on http://localhost:5173
 ```
 
-If the `workshops` collection is empty, the catalog shows eight sample workshops, and they are saved to the database the first time an admin loads the app (seeding needs an admin token). Sign in with the default admin credentials above, or register a new student account.
+If the `workshops` collection is empty, the catalog shows eight sample workshops, and they are saved to the database the first time an admin loads the app (seeding needs an admin token). Sign in with the admin credentials you set above, or register a new student account.
 
 ### Try a booking
 
