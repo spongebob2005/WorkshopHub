@@ -157,11 +157,6 @@ MongoDB collections (`users`, `workshops`, `bookings`, `payments`, `events`) are
 ├── index.html
 └── vercel.json            Build settings, /api and SPA rewrites
 ```
-
-<p align="center">
-  <img src=".github/assets/brand/app-icon-sheet.png" alt="WorkshopHub app icon at 160, 96, 64, 32 and 16 px, shown in a browser tab and on a home screen" width="720" />
-</p>
-
 ## Deployment
 
 Frontend and API deploy together to Vercel. The Vite build is served from `dist`, and `api/index.js` runs the Express app as a Vercel Function for every `/api/*` request (see `vercel.json`).
